@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:pos_app/screens/home_screen.dart';
 import 'package:pos_app/screens/settings_screen.dart';
 import 'package:pos_app/widgets/buttons.dart';
 import 'package:pos_app/widgets/textfields.dart';
+
+import '../services/userinfo_crud.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,11 +29,20 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
 
+      // todo check if username and password is correct and return all user info
       await Future.delayed(const Duration(seconds: 2));
 
       setState(() {
         _isLoading = false;
       });
+
+      // Save to Hive
+      UserInfo.setUserInfo(_usernameController.text);
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen())
+      );
     }
   }
 
@@ -89,7 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   PrimaryButton(
                     onPressed: _login,
                     child: _isLoading
-                        ? const CircularProgressIndicator()
+                        ? const CircularProgressIndicator(
+                      color: Colors.white,
+                    )
                         : const Text('Login', style: TextStyle(fontSize: 20)),
                   ),
                 ],

@@ -8,6 +8,7 @@ Future<void> main() async {
   // Hive
   await Hive.initFlutter();
   await Hive.openBox('mysql_config');
+  await Hive.openBox('userInfo');
 
   runApp(const MyApp());
 }
