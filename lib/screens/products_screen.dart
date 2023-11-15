@@ -92,7 +92,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             padding:
                 const EdgeInsets.only(left: 15, right: 15, top: 15, bottom: 5),
             child: PrimaryTextField(
-              text: 'Search',
+              hintText: 'Search',
               controller: _searchController,
               icon: const Icon(Icons.search_rounded),
               onChanged: _searchProduct,

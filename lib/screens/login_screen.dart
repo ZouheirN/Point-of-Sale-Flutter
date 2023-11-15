@@ -98,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   PrimaryTextField(
                     formKey: _formKey,
-                    text: "Username",
+                    hintText: "Username",
                     controller: _usernameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Gap(20),
                   PrimaryTextField(
                     formKey: _formKey,
-                    text: "Password",
+                    hintText: "Password",
                     obscureText: true,
                     controller: _passwordController,
                     validator: (value) {

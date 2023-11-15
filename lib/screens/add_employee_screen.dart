@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/widgets/buttons.dart';
+import 'package:pos_app/widgets/textfields.dart';
 
 const List<String> _list = [
   'Admin',
@@ -51,11 +52,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         child: ListView(
           padding: const EdgeInsets.all(15),
           children: [
-            TextFormField(
+            SecondaryTextField(
               controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-              ),
+              labelText: 'Username',
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a username';
@@ -63,11 +62,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                 return null;
               },
             ),
-            TextFormField(
+            const Gap(20),
+            SecondaryTextField(
               controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-              ),
+              labelText: 'Password',
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a password';
@@ -75,11 +73,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                 return null;
               },
             ),
-            TextFormField(
+            const Gap(20),
+
+            SecondaryTextField(
               controller: _fnameController,
-              decoration: const InputDecoration(
-                labelText: 'First Name',
-              ),
+              labelText: 'First Name',
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your first name';
@@ -87,11 +85,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                 return null;
               },
             ),
-            TextFormField(
+            const Gap(20),
+
+            SecondaryTextField(
               controller: _lnameController,
-              decoration: const InputDecoration(
-                labelText: 'Last Name',
-              ),
+              labelText: 'Last Name',
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter your last name';
@@ -99,12 +97,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                 return null;
               },
             ),
-            TextFormField(
+            const Gap(20),
+
+            SecondaryTextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Phone',
-              ),
+              labelText: 'Phone Number',
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
               ],
@@ -115,6 +113,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                 return null;
               },
             ),
+            const Gap(20),
+
             CustomDropdown<String>(
               hintText: 'Role',
               items: _list,
@@ -139,9 +139,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                         style: TextStyle(color: Colors.grey));
                   });
 
-                  // todo check if user already exists
-
-                  // add to MySQL
+                  // add to MySQL and SQLite
                   final result = await MySQLService.addUser(
                     _usernameController.text,
                     _passwordController.text,
