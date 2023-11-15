@@ -212,4 +212,19 @@ class SqliteService {
 
     return result;
   }
+
+  static Future<void> deleteAllUsers() async {
+    final db = await initializeDB();
+    await db.delete('users');
+  }
+
+  static Future<void> deleteAllProducts() async {
+    final db = await initializeDB();
+    await db.delete('products');
+  }
+
+  static Future<void> deleteAllTransactions() async {
+    final db = await initializeDB();
+    await db.delete('transactions');
+  }
 }

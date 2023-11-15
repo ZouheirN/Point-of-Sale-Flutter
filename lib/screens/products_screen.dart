@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:pos_app/screens/add_product_screen.dart';
+import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
+import 'package:pos_app/widgets/global_snackbar.dart';
 import 'package:pos_app/widgets/textfields.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -16,6 +19,28 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   final _searchController = TextEditingController();
 
+  final _refreshController = RefreshController(initialRefresh: false);
+
+  void _onRefresh() async {
+    // get all products from mysql
+    final result = await MySQLService.syncProductsFromMySQL();
+
+    if (result != ReturnTypes.success) {
+      showGlobalSnackBar('Failed to sync from MySQL');
+      _refreshController.refreshFailed();
+      return;
+    }
+
+    await SqliteService.getAllProducts().then((value) {
+      setState(() {
+        _products = value;
+        _isLoading = false;
+      });
+    });
+
+    _refreshController.refreshCompleted();
+  }
+
   @override
   void initState() {
     SqliteService.getAllProducts().then((value) {
@@ -24,6 +49,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         _isLoading = false;
       });
     });
+
     super.initState();
   }
 
@@ -74,39 +100,45 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ),
           const SizedBox(height: 15),
           Expanded(
-            child: ListView.separated(
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_products[index]['description']),
-                  subtitle: Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Barcode: ${_products[index]['barcode']}'),
-                          Text(
-                              'Price: \$${displayDouble(_products[index]['price'])}'),
-                        ],
-                      ),
-                      const Spacer(),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                              'Quantity: ${displayDouble(_products[index]['quantity'])}'),
-                        ],
-                      )
-                    ],
-                  ),
-                );
-              },
-              separatorBuilder: (context, index) => const Divider(
-                height: 10,
-                thickness: 1,
-                indent: 15,
-                endIndent: 15,
+            child: SmartRefresher(
+              controller: _refreshController,
+              enablePullDown: true,
+              header: const ClassicHeader(),
+              onRefresh: _onRefresh,
+              child: ListView.separated(
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(_products[index]['description']),
+                    subtitle: Row(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Barcode: ${_products[index]['barcode']}'),
+                            Text(
+                                'Price: \$${displayDouble(_products[index]['price'])}'),
+                          ],
+                        ),
+                        const Spacer(),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                'Quantity: ${displayDouble(_products[index]['quantity'])}'),
+                          ],
+                        )
+                      ],
+                    ),
+                  );
+                },
+                separatorBuilder: (context, index) => const Divider(
+                  height: 10,
+                  thickness: 1,
+                  indent: 15,
+                  endIndent: 15,
+                ),
+                itemCount: _products.length,
               ),
-              itemCount: _products.length,
             ),
           ),
         ],
@@ -136,7 +168,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     });
   }
 
-  // function to display string of double and only with 2 decimal places if they are not 0
+// function to display string of double and only with 2 decimal places if they are not 0
   String displayDouble(double value) {
     if (value == value.round()) {
       return value.toStringAsFixed(0);

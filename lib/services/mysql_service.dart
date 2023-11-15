@@ -25,19 +25,42 @@ class MySQLService {
     _mysqlConfigBox.put('databaseName', databaseName);
   }
 
-  // static Map<String, dynamic> getConfiguration() {
-  //   return {
-  //     'host': _mysqlConfigBox.get('host'),
-  //     'port': _mysqlConfigBox.get('port'),
-  //     'username': _mysqlConfigBox.get('username'),
-  //     'password': _mysqlConfigBox.get('password'),
-  //   };
-  // }
-
   static Future<void> syncFromMySQL(BuildContext context) async {
     try {
       showLoadingDialog('Syncing from MySQL', context);
 
+      // clear local database and recreate
+      await SqliteService.silentDeleteDB();
+      await SqliteService.initializeDB();
+
+      // sync users
+      if (await syncUsersFromMySQL() == ReturnTypes.failed) {
+        throw Exception('Failed to sync users from MySQL');
+      }
+
+      // sync products
+      if (await syncProductsFromMySQL() == ReturnTypes.failed) {
+        throw Exception('Failed to sync products from MySQL');
+      }
+
+      // sync transactions
+      if (await syncTransactionsFromMySQL() == ReturnTypes.failed) {
+        throw Exception('Failed to sync transactions from MySQL');
+      }
+
+      showGlobalSnackBar('Successfully synced from MySQL');
+
+      if (!context.mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint(e.toString());
+      showGlobalSnackBar('Failed to sync from MySQL');
+      Navigator.pop(context);
+    }
+  }
+
+  static Future<dynamic> syncUsersFromMySQL() async {
+    try {
       final conn = await MySQLConnection.createConnection(
         host: _mysqlConfigBox.get('host'),
         port: _mysqlConfigBox.get('port'),
@@ -49,14 +72,11 @@ class MySQLService {
       await conn.connect();
 
       var users = await conn.execute("SELECT * FROM users");
-      var products = await conn.execute("SELECT * FROM products");
-      var transactions = await conn.execute("SELECT * FROM transactions");
 
       await conn.close();
 
-      // clear local database and recreate
-      await SqliteService.silentDeleteDB();
-      await SqliteService.initializeDB();
+      // clear local users database and recreate
+      await SqliteService.deleteAllUsers();
 
       // add users
       for (final row in users.rows) {
@@ -71,10 +91,35 @@ class MySQLService {
         );
       }
 
+      return ReturnTypes.success;
+    } catch (e) {
+      debugPrint(e.toString());
+      return ReturnTypes.failed;
+    }
+  }
+
+  static Future<dynamic> syncProductsFromMySQL() async {
+    try {
+      final conn = await MySQLConnection.createConnection(
+        host: _mysqlConfigBox.get('host'),
+        port: _mysqlConfigBox.get('port'),
+        userName: _mysqlConfigBox.get('username'),
+        password: _mysqlConfigBox.get('password'),
+        databaseName: _mysqlConfigBox.get('databaseName'),
+      );
+
+      await conn.connect();
+
+      var products = await conn.execute("SELECT * FROM products");
+
+      await conn.close();
+
+      // clear local products database and recreate
+      await SqliteService.deleteAllProducts();
+
       // add products
       for (final row in products.rows) {
         final productInfo = row.typedAssoc();
-        debugPrint(productInfo.toString());
         SqliteService.addProduct(
           barcode: productInfo['barcode'],
           description: productInfo['description'],
@@ -87,6 +132,32 @@ class MySQLService {
           expiry: productInfo['expiry'],
         );
       }
+
+      return ReturnTypes.success;
+    } catch (e) {
+      debugPrint(e.toString());
+      return ReturnTypes.failed;
+    }
+  }
+
+  static Future<dynamic> syncTransactionsFromMySQL() async {
+    try {
+      final conn = await MySQLConnection.createConnection(
+        host: _mysqlConfigBox.get('host'),
+        port: _mysqlConfigBox.get('port'),
+        userName: _mysqlConfigBox.get('username'),
+        password: _mysqlConfigBox.get('password'),
+        databaseName: _mysqlConfigBox.get('databaseName'),
+      );
+
+      await conn.connect();
+
+      var transactions = await conn.execute("SELECT * FROM transactions");
+
+      await conn.close();
+
+      // clear local transactions database and recreate
+      await SqliteService.deleteAllTransactions();
 
       // add transactions
       for (final row in transactions.rows) {
@@ -112,14 +183,10 @@ class MySQLService {
         );
       }
 
-      showGlobalSnackBar('Synced from MySQL');
-
-      if (!context.mounted) return;
-      Navigator.pop(context);
+      return ReturnTypes.success;
     } catch (e) {
       debugPrint(e.toString());
-      showGlobalSnackBar('Failed to sync from MySQL');
-      Navigator.pop(context);
+      return ReturnTypes.failed;
     }
   }
 

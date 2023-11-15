@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/screens/add_employee_screen.dart';
+import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
+import 'package:pos_app/widgets/global_snackbar.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class EmployeesScreen extends StatefulWidget {
   const EmployeesScreen({super.key});
@@ -14,7 +17,30 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   bool _isLoading = true;
   late List _users = [];
 
-  void _addEmployee() {
+  final RefreshController _refreshController = RefreshController(
+      initialRefresh: false);
+
+  void _onRefresh() async{
+    // get all users from mysql
+    final result = await MySQLService.syncUsersFromMySQL();
+
+    if (result != ReturnTypes.success) {
+      showGlobalSnackBar('Failed to sync from MySQL');
+      _refreshController.refreshFailed();
+      return;
+    }
+
+    await SqliteService.getAllUsers().then((value) {
+      setState(() {
+        _users = value;
+        _isLoading = false;
+      });
+    });
+
+    _refreshController.refreshCompleted();
+  }
+
+  void _addUser() {
     Navigator.of(context)
         .push(
       MaterialPageRoute(builder: (context) => const AddEmployeeScreen()),
@@ -40,12 +66,13 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
           SqliteService.getUserTransactions(username).then(
-            (value) => setState(
-              () {
-                transactions = value;
-                isLoading = false;
-              },
-            ),
+                (value) =>
+                setState(
+                      () {
+                    transactions = value;
+                    isLoading = false;
+                  },
+                ),
           );
 
           if (isLoading) {
@@ -117,27 +144,34 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Employees'),
-        actions: [IconButton(onPressed: _addEmployee, icon: const Icon(Icons.add))],
+        actions: [IconButton(onPressed: _addUser, icon: const Icon(Icons.add))],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(15),
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: _users[index]['role'] == 'Admin'
-                ? const Icon(Icons.admin_panel_settings_rounded)
-                : const Icon(Icons.person_rounded),
-            title: Text('${_users[index]['fname']} ${_users[index]['lname']}'),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Username: ${_users[index]['username']}"),
-                Text("Role: ${_users[index]['role']}"),
-              ],
-            ),
-            onTap: () => _viewUserInfo(_users[index]['username']),
-          );
-        },
-        itemCount: _users.length,
+      body: SmartRefresher(
+        controller: _refreshController,
+        enablePullDown: true,
+        header: const ClassicHeader(),
+        onRefresh: _onRefresh,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(15),
+          itemBuilder: (context, index) {
+            return ListTile(
+              leading: _users[index]['role'] == 'Admin'
+                  ? const Icon(Icons.admin_panel_settings_rounded)
+                  : const Icon(Icons.person_rounded),
+              title: Text(
+                  '${_users[index]['fname']} ${_users[index]['lname']}'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Username: ${_users[index]['username']}"),
+                  Text("Role: ${_users[index]['role']}"),
+                ],
+              ),
+              onTap: () => _viewUserInfo(_users[index]['username']),
+            );
+          },
+          itemCount: _users.length,
+        ),
       ),
     );
   }

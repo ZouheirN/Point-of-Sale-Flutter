@@ -121,19 +121,13 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               onChanged: (value) {
                 _roleController.text = value;
               },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please select a role';
+                }
+                return null;
+              },
             ),
-            // TextFormField(
-            //   controller: _roleController,
-            //   decoration: const InputDecoration(
-            //     labelText: 'Role',
-            //   ),
-            //   validator: (value) {
-            //     if (value == null || value.isEmpty) {
-            //       return 'Please enter a role';
-            //     }
-            //     return null;
-            //   },
-            // ),
             const Gap(20),
             Align(alignment: Alignment.center, child: _status),
             const Gap(20),

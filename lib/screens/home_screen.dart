@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           DrawerHeader(
             decoration: const BoxDecoration(
-              color: Color(0xFF1A71DB),
+              color: Color(0xFF166DFF),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -58,31 +58,31 @@ class _HomeScreenState extends State<HomeScreen> {
             title: const Text('Create Invoice'),
             onTap: () {},
           ),
-          // ListTile(
-          //   leading: const Icon(Icons.history_rounded),
-          //   title: const Text('Transaction History'),
-          //   onTap: () {},
-          // ),
+          ListTile(
+            leading: const Icon(Icons.history_rounded),
+            title: const Text('Transaction History'),
+            onTap: () {},
+          ),
           if (UserInfo.getRole() == 'Admin')
           ListTile(
             leading: const Icon(Icons.groups_rounded),
-            title: const Text('View Employees'),
+            title: const Text('Employees'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const EmployeesScreen()),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.inventory_2_rounded),
-            title: const Text('View Products'),
+            title: const Text('Products'),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => const ProductsScreen())),
           ),
+          const Divider(indent: 15, endIndent: 15),
           ListTile(
             leading: const Icon(Icons.settings_rounded),
             title: const Text('Settings'),
             onTap: _openSettings,
           ),
-          const Divider(indent: 15, endIndent: 15),
           ListTile(
             leading: const Icon(Icons.logout_rounded),
             title: const Text('Logout'),
