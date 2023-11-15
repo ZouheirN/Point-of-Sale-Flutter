@@ -4,13 +4,11 @@ class UserInfo {
   static final userInfoBox = Hive.box('userInfo');
 
   static void setUserInfo(
-    int id,
     String username,
     String role,
     String fname,
     String lname,
   ) async {
-    userInfoBox.put('id', id);
     userInfoBox.put('username', username);
     userInfoBox.put('role', role);
     userInfoBox.put('fname', fname);

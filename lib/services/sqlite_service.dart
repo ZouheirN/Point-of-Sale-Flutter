@@ -14,8 +14,7 @@ class SqliteService {
         // create users table
         await database.execute('''
         CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY,
-        username varchar(255),
+        username varchar(255) PRIMARY KEY,
         password varchar(255),
         fname varchar(255),
         lname varchar(255),
@@ -23,15 +22,6 @@ class SqliteService {
         role varchar(255)
         );
         ''');
-        await database.insert('users', {
-          'id': 1,
-          'username': 'admin',
-          'password': 'admin',
-          'fname': 'Admin',
-          'lname': 'Admin',
-          'phone': '0000000000',
-          'role': 'admin',
-        });
         // create products table
         await database.execute(
           '''
@@ -54,10 +44,10 @@ class SqliteService {
           Serial INTEGER PRIMARY KEY,
           Trans_ID INTEGER,
           Trans_Type varchar(255),
-          User_ID INTEGER,
+          Username varchar(255),
           Machine_ID varchar(255),
           FROM_WH varchar(255),
-          To_WH varchar(255),
+          TO_WH varchar(255),
           Line_ID INTEGER,
           Product_ID varchar(255),
           Product_Name varchar(255),
@@ -67,32 +57,18 @@ class SqliteService {
           TAX_Perc INTEGER,
           DISC REAL,
           Extra_Desc varchar(255),
-          Currency varchar(255)
+          Currency varchar(255),
+          Synced BOOLEAN
           );
           ''');
-
-        await database.insert('transactions', {
-          'Serial': 1,
-          'Trans_ID': 1,
-          'Trans_Type': 'Sale',
-          'User_ID': 1,
-          'Machine_ID': '1',
-          'FROM_WH': '1',
-          'To_WH': '1',
-          'Line_ID': 1,
-          'Product_ID': '1',
-          'Product_Name': '1',
-          'Product_Price': 1,
-          'Product_Qty': 1,
-          'Product_Total': 1,
-          'TAX_Perc': 1,
-          'DISC': 1,
-          'Extra_Desc': '1',
-          'Currency': '1',
-        });
       },
       version: 1,
     );
+  }
+
+  static Future<void> silentDeleteDB() async {
+    String path = await getDatabasesPath();
+    await deleteDatabase(join(path, 'database.db'));
   }
 
   static Future<void> deleteDB(BuildContext context) async {
@@ -112,7 +88,6 @@ class SqliteService {
   }
 
   static Future<void> addUser({
-    required int id,
     required String username,
     required String password,
     required String fname,
@@ -122,7 +97,6 @@ class SqliteService {
   }) async {
     final db = await initializeDB();
     await db.insert('users', {
-      'id': id,
       'username': username,
       'password': password,
       'fname': fname,
@@ -132,8 +106,75 @@ class SqliteService {
     });
   }
 
-  static Future<Map<String, dynamic>?> getUser(
-      String username, String password) async {
+  static Future<void> addProduct({
+    required String? barcode,
+    required String? description,
+    required String? ar_desc,
+    required double? price,
+    required double? price2,
+    required int? Vat_Perc,
+    required double? quantity,
+    required String? location,
+    required int? expiry,
+  }) async {
+    final db = await initializeDB();
+    await db.insert('products', {
+      'barcode': barcode,
+      'description': description,
+      'ar_desc': ar_desc,
+      'price': price,
+      'price2': price2,
+      'Vat_Perc': Vat_Perc,
+      'quantity': quantity,
+      'location': location,
+      'expiry': expiry,
+    });
+  }
+
+  static Future<void> addTransaction({
+    required int serial,
+    required int transID,
+    required String transType,
+    required String username,
+    required String machineID,
+    required String fromWh,
+    required String toWH,
+    required int lineID,
+    required String productID,
+    required String productName,
+    required double productPrice,
+    required double productQty,
+    required double productTotal,
+    required int taxPerc,
+    required double discount,
+    required String extraDesc,
+    required String currency,
+  }) async {
+    final db = await initializeDB();
+    await db.insert('transactions', {
+      'Serial': serial,
+      'Trans_ID': transID,
+      'Trans_Type' : transType,
+      'Username' : username,
+      'Machine_ID': machineID,
+      'FROM_WH': fromWh,
+      'TO_WH': toWH,
+      'Line_ID': lineID,
+      'Product_ID': productID,
+      'Product_Name': productName,
+      'Product_Price': productPrice,
+      'Product_Qty': productQty,
+      'Product_Total': productTotal,
+      'TAX_Perc': taxPerc,
+      'DISC': discount,
+      'Extra_Desc': extraDesc,
+      'Currency': currency,
+      'Synced': true,
+    });
+  }
+
+  static Future<Map<String, dynamic>?> getUser(String username,
+      String password) async {
     final db = await initializeDB();
     final result = await db.rawQuery('''
       SELECT * FROM users WHERE username = '$username' AND password = '$password'
@@ -157,14 +198,8 @@ class SqliteService {
       String username) async {
     final db = await initializeDB();
 
-    //get user info
-    dynamic user = await db.rawQuery('''
-      SELECT * FROM users WHERE username = '$username'
-    ''');
-    user = user.first;
-
     final result = await db.rawQuery('''
-      SELECT * FROM transactions where User_ID = '${user['id']}' 
+      SELECT * FROM transactions where Username = '$username' 
     ''');
 
     return result;

@@ -4,6 +4,8 @@ import 'package:gap/gap.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mysql_client/mysql_client.dart';
 import 'package:pos_app/services/sqlite_service.dart';
+import 'package:pos_app/widgets/dialogs.dart';
+import 'package:pos_app/widgets/global_snackbar.dart';
 
 class MySQLService {
   static final _mysqlConfigBox = Hive.box('mysql_config');
@@ -26,6 +28,95 @@ class MySQLService {
   //   };
   // }
 
+  static Future<void> syncFromMySQL(BuildContext context) async {
+    try {
+      showLoadingDialog('Syncing from MySQL', context);
+
+      final conn = await MySQLConnection.createConnection(
+        host: _mysqlConfigBox.get('host'),
+        port: _mysqlConfigBox.get('port'),
+        userName: _mysqlConfigBox.get('username'),
+        password: _mysqlConfigBox.get('password'),
+        databaseName: _mysqlConfigBox.get('databaseName'),
+      );
+
+      await conn.connect();
+
+      var users = await conn.execute("SELECT * FROM users");
+      var products = await conn.execute("SELECT * FROM products");
+      var transactions = await conn.execute("SELECT * FROM transactions");
+
+      await conn.close();
+
+      // clear local database and recreate
+      await SqliteService.silentDeleteDB();
+      await SqliteService.initializeDB();
+
+      // add users
+      for (final row in users.rows) {
+        final userInfo = row.typedAssoc();
+        SqliteService.addUser(
+          username: userInfo['username'],
+          password: userInfo['password'],
+          fname: userInfo['fname'],
+          lname: userInfo['lname'],
+          phone: userInfo['phone'],
+          role: userInfo['role'],
+        );
+      }
+
+      // add products
+      for (final row in products.rows) {
+        final productInfo = row.typedAssoc();
+        debugPrint(productInfo.toString());
+        SqliteService.addProduct(
+          barcode: productInfo['barcode'],
+          description: productInfo['description'],
+          ar_desc: productInfo['ar_desc'],
+          price: productInfo['price'],
+          price2: productInfo['price2'],
+          Vat_Perc: productInfo['Vat_Perc'],
+          quantity: productInfo['quantity'],
+          location: productInfo['location'],
+          expiry: productInfo['expiry'],
+        );
+      }
+
+      // add transactions
+      for (final row in transactions.rows) {
+        final transactionInfo = row.typedAssoc();
+        SqliteService.addTransaction(
+          serial: transactionInfo['Serial'],
+          transID: transactionInfo['Trans_ID'],
+          transType: transactionInfo['Trans_Type'],
+          username: transactionInfo['Username'],
+          machineID: transactionInfo['Machine_ID'],
+          fromWh: transactionInfo['FROM_WH'],
+          toWH: transactionInfo['TO_WH'],
+          lineID: transactionInfo['Line_ID'],
+          productID: transactionInfo['Product_ID'],
+          productName: transactionInfo['Product_Name'],
+          productPrice: transactionInfo['Product_Price'],
+          productQty: transactionInfo['Product_Qty'],
+          productTotal: transactionInfo['Product_Total'],
+          taxPerc: transactionInfo['Tax_Perc'],
+          discount: transactionInfo['DISC'],
+          extraDesc: transactionInfo['Extra_Desc'],
+          currency: transactionInfo['Currency'],
+        );
+      }
+
+      showGlobalSnackBar('Synced from MySQL');
+
+      if (!context.mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint(e.toString());
+      showGlobalSnackBar('Failed to sync from MySQL');
+      Navigator.pop(context);
+    }
+  }
+
   static Future<bool> _addUser(String username, String password, String fname,
       String lname, String phone, String role) async {
     try {
@@ -47,7 +138,6 @@ class MySQLService {
       for (final row in result.rows) {
         final userInfo = row.typedAssoc();
         SqliteService.addUser(
-          id: userInfo['id'],
           username: userInfo['username'],
           password: userInfo['password'],
           fname: userInfo['fname'],

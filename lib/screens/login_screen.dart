@@ -51,7 +51,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Save to Hive
       UserInfo.setUserInfo(
-        user['id'],
         user['username'],
         user['role'],
         user['fname'],
