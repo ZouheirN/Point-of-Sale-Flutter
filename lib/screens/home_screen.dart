@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/screens/login_screen.dart';
+import 'package:pos_app/screens/products_screen.dart';
 import 'package:pos_app/screens/settings_screen.dart';
 import 'package:pos_app/widgets/card.dart';
 import 'package:pos_app/screens/employees_screen.dart';
@@ -63,11 +64,17 @@ class _HomeScreenState extends State<HomeScreen> {
           //   onTap: () {},
           // ),
           ListTile(
-            leading: Icon(Icons.groups_rounded),
-            title: Text('View Employees'),
+            leading: const Icon(Icons.groups_rounded),
+            title: const Text('View Employees'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const EmployeesScreen()),
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.inventory_2_rounded),
+            title: const Text('View Products'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => const ProductsScreen())),
           ),
           ListTile(
             leading: const Icon(Icons.settings_rounded),

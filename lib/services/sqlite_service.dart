@@ -109,10 +109,10 @@ class SqliteService {
   static Future<void> addProduct({
     required String? barcode,
     required String? description,
-    required String? ar_desc,
+    required String? arDesc,
     required double? price,
     required double? price2,
-    required int? Vat_Perc,
+    required int? vatPerc,
     required double? quantity,
     required String? location,
     required int? expiry,
@@ -121,10 +121,10 @@ class SqliteService {
     await db.insert('products', {
       'barcode': barcode,
       'description': description,
-      'ar_desc': ar_desc,
+      'ar_desc': arDesc,
       'price': price,
       'price2': price2,
-      'Vat_Perc': Vat_Perc,
+      'Vat_Perc': vatPerc,
       'quantity': quantity,
       'location': location,
       'expiry': expiry,
@@ -194,6 +194,14 @@ class SqliteService {
     return result;
   }
 
+  static Future<List<Map<String, dynamic>>> getAllProducts() async {
+    final db = await initializeDB();
+    final result = await db.rawQuery('''
+      SELECT * FROM products
+    ''');
+    return result;
+  }
+
   static Future<List<Map<String, Object?>>> getUserTransactions(
       String username) async {
     final db = await initializeDB();
@@ -204,4 +212,5 @@ class SqliteService {
 
     return result;
   }
+
 }

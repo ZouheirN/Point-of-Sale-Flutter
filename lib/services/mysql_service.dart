@@ -72,10 +72,10 @@ class MySQLService {
         SqliteService.addProduct(
           barcode: productInfo['barcode'],
           description: productInfo['description'],
-          ar_desc: productInfo['ar_desc'],
+          arDesc: productInfo['ar_desc'],
           price: productInfo['price'],
           price2: productInfo['price2'],
-          Vat_Perc: productInfo['Vat_Perc'],
+          vatPerc: productInfo['Vat_Perc'],
           quantity: productInfo['quantity'],
           location: productInfo['location'],
           expiry: productInfo['expiry'],

@@ -6,6 +6,8 @@ class PrimaryTextField extends StatefulWidget {
   final GlobalKey<FormState>? formKey;
   final bool obscureText;
   final String? Function(String?)? validator;
+  final Icon? icon;
+  final void Function(String)? onChanged;
 
   const PrimaryTextField({
     super.key,
@@ -14,6 +16,8 @@ class PrimaryTextField extends StatefulWidget {
     this.formKey,
     this.obscureText = false,
     this.validator,
+    this.icon,
+    this.onChanged,
   });
 
   @override
@@ -24,10 +28,12 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      onChanged: widget.onChanged,
       cursorColor: Colors.black,
       obscureText: widget.obscureText,
       controller: widget.controller,
       decoration: InputDecoration(
+        prefixIcon: widget.icon,
         hintText: widget.text,
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
