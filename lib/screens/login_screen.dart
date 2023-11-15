@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/screens/home_screen.dart';
 import 'package:pos_app/screens/settings_screen.dart';
+import 'package:pos_app/services/sqlite_service.dart';
 import 'package:pos_app/widgets/buttons.dart';
 import 'package:pos_app/widgets/textfields.dart';
 
@@ -19,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  String _status = '';
   bool _isLoading = false;
 
   _login() async {
@@ -29,27 +31,42 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
 
-      // todo check if username and password is correct and return all user info
-      await Future.delayed(const Duration(seconds: 2));
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text;
+
+      // check if username and password is correct and return all user info
+      final user = await SqliteService.getUser(username, password);
+
+      if (user == null) {
+        setState(() {
+          _isLoading = false;
+          _status = 'Invalid username or password';
+        });
+        return;
+      }
 
       setState(() {
         _isLoading = false;
       });
 
       // Save to Hive
-      UserInfo.setUserInfo(_usernameController.text);
+      UserInfo.setUserInfo(
+        user['id'],
+        user['username'],
+        user['role'],
+        user['fname'],
+        user['lname'],
+      );
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen())
-      );
+          MaterialPageRoute(builder: (context) => const HomeScreen()));
     }
   }
 
   _goToSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const SettingsScreen())
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
   }
 
   @override
@@ -97,13 +114,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  const Gap(60),
+                  const Gap(30),
+                  Text(_status, style: const TextStyle(color: Colors.red)),
+                  const Gap(30),
                   PrimaryButton(
                     onPressed: _login,
                     child: _isLoading
                         ? const CircularProgressIndicator(
-                      color: Colors.white,
-                    )
+                            color: Colors.white,
+                          )
                         : const Text('Login', style: TextStyle(fontSize: 20)),
                   ),
                 ],

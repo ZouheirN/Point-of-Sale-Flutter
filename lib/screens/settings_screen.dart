@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pos_app/services/mysql_configuration.dart';
+import 'package:pos_app/services/mysql_service.dart';
+import 'package:pos_app/services/sqlite_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -13,13 +14,18 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(15),
         children: [
-          Text('Database Settings', style: TextStyle(fontSize: 20)),
+          const Text('Database Settings', style: TextStyle(fontSize: 20)),
           ListTile(
-            title: Text('Configure MySQL Database'),
-            trailing: Icon(Icons.cable_rounded),
-            onTap: () => MySQLConfiguration.showConfigurationDialog(context),
+            title: const Text('Configure MySQL Database'),
+            trailing: const Icon(Icons.cable_rounded),
+            onTap: () => MySQLService.showConfigurationDialog(context),
           ),
-          Divider(),
+          ListTile(
+            title: const Text('Delete Local Database'),
+            trailing: const Icon(Icons.delete),
+            onTap: () => SqliteService.deleteDB(context),
+          ),
+          const Divider(),
         ],
       ),
     );
