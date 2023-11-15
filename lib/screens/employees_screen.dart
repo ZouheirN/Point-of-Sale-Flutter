@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:pos_app/services/mysql_service.dart';
+import 'package:pos_app/screens/add_employee_screen.dart';
 import 'package:pos_app/services/sqlite_service.dart';
 
 class EmployeesScreen extends StatefulWidget {
@@ -14,8 +14,21 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   bool _isLoading = true;
   late List _users = [];
 
-  void _addUser() {
-    MySQLService.showAddUserDialog(context);
+  void _addEmployee() {
+    Navigator.of(context)
+        .push(
+      MaterialPageRoute(builder: (context) => const AddEmployeeScreen()),
+    )
+        .then((value) {
+      setState(() {
+        SqliteService.getAllUsers().then((value) {
+          setState(() {
+            _users = value;
+            _isLoading = false;
+          });
+        });
+      });
+    });
   }
 
   void _viewUserInfo(String username) {
@@ -55,20 +68,21 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                     Text('No transactions made'),
                   ],
                 )
-              else for (var transaction in transactions)
-                ListTile(
-                  title: Text(
-                    'Invoice #${transaction['Trans_ID']}',
-                    style: const TextStyle(fontSize: 20),
+              else
+                for (var transaction in transactions)
+                  ListTile(
+                    title: Text(
+                      'Invoice #${transaction['Trans_ID']}',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Transaction Type: ${transaction['Trans_Type']}'),
+                        Text('Total Price: ${transaction['Product_Total']}'),
+                      ],
+                    ),
                   ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Transaction Type: ${transaction['Trans_Type']}'),
-                      Text('Total Price: ${transaction['Product_Total']}'),
-                    ],
-                  ),
-                ),
             ],
           );
         });
@@ -103,13 +117,13 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Employees'),
-        actions: [IconButton(onPressed: _addUser, icon: const Icon(Icons.add))],
+        actions: [IconButton(onPressed: _addEmployee, icon: const Icon(Icons.add))],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(15),
         itemBuilder: (context, index) {
           return ListTile(
-            leading: _users[index]['role'] == 'admin'
+            leading: _users[index]['role'] == 'Admin'
                 ? const Icon(Icons.admin_panel_settings_rounded)
                 : const Icon(Icons.person_rounded),
             title: Text('${_users[index]['fname']} ${_users[index]['lname']}'),

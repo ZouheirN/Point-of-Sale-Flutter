@@ -154,8 +154,8 @@ class SqliteService {
     await db.insert('transactions', {
       'Serial': serial,
       'Trans_ID': transID,
-      'Trans_Type' : transType,
-      'Username' : username,
+      'Trans_Type': transType,
+      'Username': username,
       'Machine_ID': machineID,
       'FROM_WH': fromWh,
       'TO_WH': toWH,
@@ -173,8 +173,8 @@ class SqliteService {
     });
   }
 
-  static Future<Map<String, dynamic>?> getUser(String username,
-      String password) async {
+  static Future<Map<String, dynamic>?> getUser(
+      String username, String password) async {
     final db = await initializeDB();
     final result = await db.rawQuery('''
       SELECT * FROM users WHERE username = '$username' AND password = '$password'
@@ -212,5 +212,4 @@ class SqliteService {
 
     return result;
   }
-
 }

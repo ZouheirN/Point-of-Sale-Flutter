@@ -63,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
           //   title: const Text('Transaction History'),
           //   onTap: () {},
           // ),
+          if (UserInfo.getRole() == 'Admin')
           ListTile(
             leading: const Icon(Icons.groups_rounded),
             title: const Text('View Employees'),

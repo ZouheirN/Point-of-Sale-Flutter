@@ -7,6 +7,12 @@ import 'package:pos_app/services/sqlite_service.dart';
 import 'package:pos_app/widgets/dialogs.dart';
 import 'package:pos_app/widgets/global_snackbar.dart';
 
+enum ReturnTypes {
+  success,
+  failed,
+  duplicate,
+}
+
 class MySQLService {
   static final _mysqlConfigBox = Hive.box('mysql_config');
 
@@ -117,39 +123,43 @@ class MySQLService {
     }
   }
 
-  static Future<bool> _addUser(String username, String password, String fname,
+  static Future<dynamic> addUser(String username, String password, String fname,
       String lname, String phone, String role) async {
     try {
       final conn = await MySQLConnection.createConnection(
-          host: _mysqlConfigBox.get('host'),
-          port: _mysqlConfigBox.get('port'),
-          userName: _mysqlConfigBox.get('username'),
-          password: _mysqlConfigBox.get('password'),
-          databaseName: _mysqlConfigBox.get('databaseName'));
+        host: _mysqlConfigBox.get('host'),
+        port: _mysqlConfigBox.get('port'),
+        userName: _mysqlConfigBox.get('username'),
+        password: _mysqlConfigBox.get('password'),
+        databaseName: _mysqlConfigBox.get('databaseName'),
+      );
       await conn.connect();
 
       var stmt = await conn.prepare(
         "INSERT INTO users (username, password, fname, lname, phone, role) VALUES (?, ?, ?, ?, ?, ?)",
       );
-      final result =
-          await stmt.execute([username, password, fname, lname, phone, role]);
+      await stmt.execute([username, password, fname, lname, phone, role]);
       await stmt.deallocate();
+      await conn.close();
 
-      for (final row in result.rows) {
-        final userInfo = row.typedAssoc();
-        SqliteService.addUser(
-          username: userInfo['username'],
-          password: userInfo['password'],
-          fname: userInfo['fname'],
-          lname: userInfo['lname'],
-          phone: userInfo['phone'],
-          role: userInfo['role'],
-        );
-      }
-      return true;
+      SqliteService.addUser(
+        username: username,
+        password: password,
+        fname: fname,
+        lname: lname,
+        phone: phone,
+        role: role,
+      );
+
+      return ReturnTypes.success;
     } catch (e) {
       debugPrint(e.toString());
-      return false;
+
+      if (e.toString().contains('Duplicate entry')) {
+        return ReturnTypes.duplicate;
+      }
+
+      return ReturnTypes.failed;
     }
   }
 
@@ -263,161 +273,6 @@ class MySQLService {
             ],
           ),
         );
-      },
-    );
-  }
-
-  static void showAddUserDialog(BuildContext context) {
-    final usernameController = TextEditingController();
-    final passwordController = TextEditingController();
-    final fnameController = TextEditingController();
-    final lnameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final roleController = TextEditingController();
-
-    final formKey = GlobalKey<FormState>();
-
-    Text status = const Text("");
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Add User'),
-            content: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      controller: usernameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a username';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: passwordController,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: fnameController,
-                      decoration: const InputDecoration(
-                        labelText: 'First Name',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your first name';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: lnameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Last Name',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your last name';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone',
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a phone number';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: roleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Role',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a role';
-                        }
-                        return null;
-                      },
-                    ),
-                    const Gap(20),
-                    status,
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  if (formKey.currentState!.validate()) {
-                    setState(() {
-                      status = const Text('Adding user...',
-                          style: TextStyle(color: Colors.grey));
-                    });
-
-                    // todo check if user already exists
-
-                    // add to MySQL
-                    final result = await _addUser(
-                      usernameController.text,
-                      passwordController.text,
-                      fnameController.text,
-                      lnameController.text,
-                      phoneController.text,
-                      roleController.text,
-                    );
-
-                    if (!result) {
-                      setState(() {
-                        status = const Text('Failed to add user',
-                            style: TextStyle(color: Colors.red));
-                      });
-                    } else {
-                      setState(() {
-                        status = const Text('User added',
-                            style: TextStyle(color: Colors.green));
-                      });
-                    }
-                  }
-                },
-                child: const Text('Add'),
-              ),
-            ],
-          );
-        });
       },
     );
   }
