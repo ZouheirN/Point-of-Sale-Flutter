@@ -307,6 +307,22 @@ class SqliteService {
     return result;
   }
 
+  static Future<List<Map<String, dynamic>>> getAllCustomers() async {
+    final db = await initializeDB();
+    final result = await db.rawQuery('''
+      SELECT * FROM customers
+    ''');
+    return result;
+  }
+
+  static Future<List<Map<String, dynamic>>> getAllWarehouses() async {
+    final db = await initializeDB();
+    final result = await db.rawQuery('''
+      SELECT * FROM warehouse
+    ''');
+    return result;
+  }
+
   static Future<void> deleteAllUsers() async {
     final db = await initializeDB();
     await db.delete('users');

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/services/sqlite_service.dart';
 import 'package:pos_app/widgets/buttons.dart';
+import 'package:pos_app/widgets/dialogs.dart';
 import 'package:pos_app/widgets/textfields.dart';
 
 class NewTransactionScreen extends StatefulWidget {
@@ -56,6 +57,12 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             }
             return null;
           },
+          suffixIcon: IconButton(
+            onPressed: () {
+              showSelectCustomerDialog(context, _customerController);
+            },
+            icon: const Icon(Icons.search),
+          ),
         ),
       );
     }
@@ -86,6 +93,12 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             }
             return null;
           },
+          suffixIcon: IconButton(
+            onPressed: () {
+              showSelectWarehouseDialog(context, _fromWHController);
+            },
+            icon: const Icon(Icons.search),
+          )
         ),
       );
     }
@@ -102,6 +115,12 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             }
             return null;
           },
+          suffixIcon: IconButton(
+            onPressed: () {
+              showSelectWarehouseDialog(context, _toWHController);
+            },
+            icon: const Icon(Icons.search),
+          )
         ),
       );
     }
