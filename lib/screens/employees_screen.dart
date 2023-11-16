@@ -65,7 +65,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       context: context,
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
-          SqliteService.getUserTransactions(username).then(
+          SqliteService.getAllUserTransactions(username).then(
                 (value) =>
                 setState(
                       () {
@@ -126,6 +126,12 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       });
     });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
   }
 
   @override

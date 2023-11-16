@@ -5,6 +5,7 @@ import 'package:pos_app/screens/login_screen.dart';
 import 'package:pos_app/screens/new_transaction_screen.dart';
 import 'package:pos_app/screens/products_screen.dart';
 import 'package:pos_app/screens/settings_screen.dart';
+import 'package:pos_app/screens/transaction_history_screen.dart';
 import 'package:pos_app/widgets/card.dart';
 
 import '../services/userinfo_crud.dart';
@@ -66,7 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ListTile(
             leading: const Icon(Icons.history_rounded),
             title: const Text('Transaction History'),
-            onTap: () {},
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (context) => const TransactionHistoryScreen()),
+            )
           ),
           if (UserInfo.getRole() == 'Admin')
             ListTile(

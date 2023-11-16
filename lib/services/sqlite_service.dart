@@ -288,7 +288,7 @@ class SqliteService {
     return result;
   }
 
-  static Future<List<Map<String, Object?>>> getUserTransactions(
+  static Future<List<Map<String, Object?>>> getAllUserTransactions(
       String username) async {
     final db = await initializeDB();
 
