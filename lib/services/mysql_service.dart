@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mysql_client/mysql_client.dart';
@@ -46,6 +45,11 @@ class MySQLService {
       // sync transactions
       if (await syncTransactionsFromMySQL() == ReturnTypes.failed) {
         throw Exception('Failed to sync transactions from MySQL');
+      }
+
+      // sync transactions options
+      if (await syncTransactionOptionsFromMySQL() == ReturnTypes.failed) {
+        throw Exception('Failed to sync transactions options from MySQL');
       }
 
       showGlobalSnackBar('Successfully synced from MySQL');
@@ -180,6 +184,47 @@ class MySQLService {
           discount: transactionInfo['DISC'],
           extraDesc: transactionInfo['Extra_Desc'],
           currency: transactionInfo['Currency'],
+        );
+      }
+
+      return ReturnTypes.success;
+    } catch (e) {
+      debugPrint(e.toString());
+      return ReturnTypes.failed;
+    }
+  }
+
+  static Future<dynamic> syncTransactionOptionsFromMySQL() async {
+    try {
+      final conn = await MySQLConnection.createConnection(
+        host: _mysqlConfigBox.get('host'),
+        port: _mysqlConfigBox.get('port'),
+        userName: _mysqlConfigBox.get('username'),
+        password: _mysqlConfigBox.get('password'),
+        databaseName: _mysqlConfigBox.get('databaseName'),
+      );
+
+      await conn.connect();
+
+      var products = await conn.execute("SELECT * FROM transactionOptions");
+
+      await conn.close();
+
+      // clear local transaction options database and recreate
+      await SqliteService.deleteAllTransactionOptions();
+
+      // add transaction options
+      for (final row in products.rows) {
+        final transactionOption = row.typedAssoc();
+        SqliteService.addTransactionOption(
+          id: transactionOption['id'],
+          description: transactionOption['description'],
+          showCustomer: transactionOption['showCustomer'],
+          showCurrency: transactionOption['showCurrency'],
+          showFromWh: transactionOption['showFromWh'],
+          showToWh: transactionOption['showToWh'],
+          showAutoAdd: transactionOption['showAutoAdd'],
+          affectQty: transactionOption['affectQty'],
         );
       }
 

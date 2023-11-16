@@ -74,7 +74,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               },
             ),
             const Gap(20),
-
             SecondaryTextField(
               controller: _fnameController,
               labelText: 'First Name',
@@ -86,7 +85,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               },
             ),
             const Gap(20),
-
             SecondaryTextField(
               controller: _lnameController,
               labelText: 'Last Name',
@@ -98,7 +96,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               },
             ),
             const Gap(20),
-
             SecondaryTextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
@@ -114,7 +111,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               },
             ),
             const Gap(20),
-
             CustomDropdown<String>(
               hintText: 'Role',
               items: _list,

@@ -73,6 +73,7 @@ class SecondaryTextField extends StatefulWidget {
   final String? labelText;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
+  final Widget? suffixIcon;
 
   const SecondaryTextField({
     super.key,
@@ -85,7 +86,7 @@ class SecondaryTextField extends StatefulWidget {
     this.onChanged,
     this.labelText,
     this.keyboardType,
-    this.inputFormatters,
+    this.inputFormatters, this.suffixIcon,
   });
 
   @override
@@ -104,6 +105,7 @@ class _SecondaryTextFieldState extends State<SecondaryTextField> {
       inputFormatters: widget.inputFormatters,
       decoration: InputDecoration(
         prefixIcon: widget.icon,
+        suffixIcon: widget.suffixIcon,
         hintText: widget.hintText,
         labelText: widget.labelText,
         focusedBorder: OutlineInputBorder(

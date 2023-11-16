@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:pos_app/screens/employees_screen.dart';
 import 'package:pos_app/screens/login_screen.dart';
+import 'package:pos_app/screens/new_transaction_screen.dart';
 import 'package:pos_app/screens/products_screen.dart';
 import 'package:pos_app/screens/settings_screen.dart';
 import 'package:pos_app/widgets/card.dart';
-import 'package:pos_app/screens/employees_screen.dart';
+
 import '../services/userinfo_crud.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -55,8 +57,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.attach_money_rounded),
-            title: const Text('Create Invoice'),
-            onTap: () {},
+            title: const Text('New Transaction'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (context) => const NewTransactionScreen()),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.history_rounded),
@@ -64,13 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {},
           ),
           if (UserInfo.getRole() == 'Admin')
-          ListTile(
-            leading: const Icon(Icons.groups_rounded),
-            title: const Text('Employees'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const EmployeesScreen()),
+            ListTile(
+              leading: const Icon(Icons.groups_rounded),
+              title: const Text('Employees'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (context) => const EmployeesScreen()),
+              ),
             ),
-          ),
           ListTile(
             leading: const Icon(Icons.inventory_2_rounded),
             title: const Text('Products'),

@@ -14,17 +14,16 @@ class SqliteService {
         // create users table
         await database.execute('''
         CREATE TABLE IF NOT EXISTS users (
-        username varchar(255) PRIMARY KEY,
-        password varchar(255),
-        fname varchar(255),
-        lname varchar(255),
-        phone varchar(255),
-        role varchar(255)
+          username varchar(255) PRIMARY KEY,
+          password varchar(255),
+          fname varchar(255),
+          lname varchar(255),
+          phone varchar(255),
+          role varchar(255)
         );
         ''');
         // create products table
-        await database.execute(
-          '''
+        await database.execute('''
           CREATE TABLE IF NOT EXISTS products (
           barcode varchar(255),
           description varchar(255),
@@ -36,8 +35,7 @@ class SqliteService {
           location varchar(255),
           expiry INTEGER
           );
-          ''',
-        );
+          ''');
         // create transactions table
         await database.execute('''
           CREATE TABLE IF NOT EXISTS transactions (
@@ -58,7 +56,20 @@ class SqliteService {
           DISC REAL,
           Extra_Desc varchar(255),
           Currency varchar(255),
-          Synced BOOLEAN
+          Synced INTEGER
+          );
+          ''');
+        // create transactions options table
+        await database.execute('''
+          CREATE TABLE IF NOT EXISTS transactionOptions (
+          id integer primary key,
+          description varchar(255),
+          showCustomer INTEGER,
+          showCurrency INTEGER,
+          showFromWh INTEGER,
+          showToWh INTEGER,
+          showAutoAdd INTEGER,
+          affectQty integer
           );
           ''');
       },
@@ -173,6 +184,32 @@ class SqliteService {
     });
   }
 
+  static Future<void> addTransactionOption({
+    required int id,
+    required String description,
+    required bool showCustomer,
+    required bool showCurrency,
+    required bool showFromWh,
+    required bool showToWh,
+    required bool showAutoAdd,
+    required int affectQty,
+  }) async {
+    final db = await initializeDB();
+    await db.insert(
+      'transactionOptions',
+      {
+        'id': id,
+        'description': description,
+        'showCustomer': showCustomer,
+        'showCurrency': showCurrency,
+        'showFromWh': showFromWh,
+        'showToWh': showToWh,
+        'showAutoAdd': showAutoAdd,
+        'affectQty': affectQty,
+      },
+    );
+  }
+
   static Future<Map<String, dynamic>?> getUser(
       String username, String password) async {
     final db = await initializeDB();
@@ -213,6 +250,14 @@ class SqliteService {
     return result;
   }
 
+  static Future<List<Map<String, dynamic>>> getTransactionOptions() async {
+    final db = await initializeDB();
+    final result = await db.rawQuery('''
+      SELECT * FROM transactionOptions
+    ''');
+    return result;
+  }
+
   static Future<void> deleteAllUsers() async {
     final db = await initializeDB();
     await db.delete('users');
@@ -226,5 +271,10 @@ class SqliteService {
   static Future<void> deleteAllTransactions() async {
     final db = await initializeDB();
     await db.delete('transactions');
+  }
+
+  static Future<void> deleteAllTransactionOptions() async {
+    final db = await initializeDB();
+    await db.delete('transactionOptions');
   }
 }
