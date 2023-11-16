@@ -25,53 +25,69 @@ class SqliteService {
         // create products table
         await database.execute('''
           CREATE TABLE IF NOT EXISTS products (
-          barcode varchar(255),
-          description varchar(255),
-          ar_desc varchar(255),
-          price REAL,
-          price2 REAL,
-          Vat_Perc INTEGER,
-          quantity REAL,
-          location varchar(255),
-          expiry INTEGER
+            barcode varchar(255) PRIMARY KEY,
+            description TEXT,
+            ar_desc TEXT,
+            price REAL,
+            price2 REAL,
+            Vat_Perc INTEGER,
+            quantity REAL,
+            location TEXT,
+            expiry TEXT
           );
           ''');
         // create transactions table
         await database.execute('''
           CREATE TABLE IF NOT EXISTS transactions (
-          Serial INTEGER PRIMARY KEY,
-          Trans_ID INTEGER,
-          Trans_Type varchar(255),
-          Username varchar(255),
-          Machine_ID varchar(255),
-          FROM_WH varchar(255),
-          TO_WH varchar(255),
-          Line_ID INTEGER,
-          Product_ID varchar(255),
-          Product_Name varchar(255),
-          Product_Price REAL,
-          Product_Qty REAL,
-          Product_Total REAL,
-          TAX_Perc INTEGER,
-          DISC REAL,
-          Extra_Desc varchar(255),
-          Currency varchar(255),
-          Synced INTEGER
+            serial INTEGER PRIMARY KEY,
+            trans_id INTEGER,
+            trans_type VARCHAR(20),
+            username VARCHAR(20),
+            machine_id VARCHAR(25),
+            customer VARCHAR(25),
+            from_wh VARCHAR(10),
+            to_wh VARCHAR(10),
+            line_id INTEGER,
+            product_id VARCHAR(25),
+            product_name VARCHAR(100),
+            product_price REAL,
+            product_qty REAL,
+            product_total REAL,
+            tax_perc INTEGER,
+            discount REAL,
+            extra_desc VARCHAR(50),
+            currency VARCHAR(3),
+            reference VARCHAR(25),
+            trans_date TEXT
           );
           ''');
         // create transactions options table
         await database.execute('''
           CREATE TABLE IF NOT EXISTS transactionOptions (
-          id integer primary key,
-          description varchar(255),
-          showCustomer INTEGER,
-          showCurrency INTEGER,
-          showFromWh INTEGER,
-          showToWh INTEGER,
-          showAutoAdd INTEGER,
-          affectQty integer
+            id integer primary key,
+            description varchar(255),
+            showCustomer INTEGER,
+            showCurrency INTEGER,
+            showFromWh INTEGER,
+            showToWh INTEGER,
+            showAutoAdd INTEGER,
+            affectQty INTEGER
           );
           ''');
+        // create warehouse tables
+        await database.execute('''
+        CREATE TABLE IF NOT EXISTS warehouse (
+          code varchar(255) PRIMARY KEY,
+          name TEXT
+        );
+        ''');
+        // create customers table
+        await database.execute('''
+        CREATE TABLE IF NOT EXISTS customers (
+          id INTEGER PRIMARY KEY,
+          name TEXT
+        );
+        ''');
       },
       version: 1,
     );
@@ -135,7 +151,7 @@ class SqliteService {
       'ar_desc': arDesc,
       'price': price,
       'price2': price2,
-      'Vat_Perc': vatPerc,
+      'vat_perc': vatPerc,
       'quantity': quantity,
       'location': location,
       'expiry': expiry,
@@ -148,6 +164,7 @@ class SqliteService {
     required String transType,
     required String username,
     required String machineID,
+    required String customer,
     required String fromWh,
     required String toWH,
     required int lineID,
@@ -160,38 +177,42 @@ class SqliteService {
     required double discount,
     required String extraDesc,
     required String currency,
+    required String reference,
+    required String transDate,
   }) async {
     final db = await initializeDB();
     await db.insert('transactions', {
-      'Serial': serial,
-      'Trans_ID': transID,
-      'Trans_Type': transType,
-      'Username': username,
-      'Machine_ID': machineID,
-      'FROM_WH': fromWh,
-      'TO_WH': toWH,
-      'Line_ID': lineID,
-      'Product_ID': productID,
-      'Product_Name': productName,
-      'Product_Price': productPrice,
-      'Product_Qty': productQty,
-      'Product_Total': productTotal,
-      'TAX_Perc': taxPerc,
-      'DISC': discount,
-      'Extra_Desc': extraDesc,
-      'Currency': currency,
-      'Synced': true,
+      'serial': serial,
+      'trans_id': transID,
+      'trans_type': transType,
+      'username': username,
+      'machine_id': machineID,
+      'customer': customer,
+      'from_wh': fromWh,
+      'to_wh': toWH,
+      'line_id': lineID,
+      'product_id': productID,
+      'product_name': productName,
+      'product_price': productPrice,
+      'product_qty': productQty,
+      'product_total': productTotal,
+      'tax_perc': taxPerc,
+      'discount': discount,
+      'extra_desc': extraDesc,
+      'currency': currency,
+      'reference': reference,
+      'trans_date': transDate,
     });
   }
 
   static Future<void> addTransactionOption({
     required int id,
     required String description,
-    required bool showCustomer,
-    required bool showCurrency,
-    required bool showFromWh,
-    required bool showToWh,
-    required bool showAutoAdd,
+    required int showCustomer,
+    required int showCurrency,
+    required int showFromWh,
+    required int showToWh,
+    required int showAutoAdd,
     required int affectQty,
   }) async {
     final db = await initializeDB();
@@ -206,6 +227,34 @@ class SqliteService {
         'showToWh': showToWh,
         'showAutoAdd': showAutoAdd,
         'affectQty': affectQty,
+      },
+    );
+  }
+
+  static Future<void> addCustomer({
+    required int id,
+    required String name,
+  }) async {
+    final db = await initializeDB();
+    await db.insert(
+      'customers',
+      {
+        'id': id,
+        'name': name,
+      },
+    );
+  }
+
+  static Future<void> addWarehouse({
+    required String code,
+    required String name,
+  }) async {
+    final db = await initializeDB();
+    await db.insert(
+      'warehouse',
+      {
+        'code': code,
+        'name': name,
       },
     );
   }
@@ -244,7 +293,7 @@ class SqliteService {
     final db = await initializeDB();
 
     final result = await db.rawQuery('''
-      SELECT * FROM transactions where Username = '$username' 
+      SELECT * FROM transactions where username = '$username' 
     ''');
 
     return result;
@@ -276,5 +325,15 @@ class SqliteService {
   static Future<void> deleteAllTransactionOptions() async {
     final db = await initializeDB();
     await db.delete('transactionOptions');
+  }
+
+  static Future<void> deleteAllCustomers() async {
+    final db = await initializeDB();
+    await db.delete('customers');
+  }
+
+  static Future<void> deleteAllWarehouses() async {
+    final db = await initializeDB();
+    await db.delete('warehouse');
   }
 }

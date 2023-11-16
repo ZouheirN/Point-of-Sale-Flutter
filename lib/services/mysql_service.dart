@@ -36,21 +36,37 @@ class MySQLService {
       if (await syncUsersFromMySQL() == ReturnTypes.failed) {
         throw Exception('Failed to sync users from MySQL');
       }
+      debugPrint('Finished syncing users from MySQL');
 
       // sync products
       if (await syncProductsFromMySQL() == ReturnTypes.failed) {
         throw Exception('Failed to sync products from MySQL');
       }
+      debugPrint('Finished syncing products from MySQL');
 
       // sync transactions
       if (await syncTransactionsFromMySQL() == ReturnTypes.failed) {
         throw Exception('Failed to sync transactions from MySQL');
       }
+      debugPrint('Finished syncing transactions from MySQL');
 
       // sync transactions options
       if (await syncTransactionOptionsFromMySQL() == ReturnTypes.failed) {
         throw Exception('Failed to sync transactions options from MySQL');
       }
+      debugPrint('Finished syncing transactions options from MySQL');
+
+      // sync customers
+      if (await syncCustomersFromMySQL() == ReturnTypes.failed) {
+        throw Exception('Failed to sync customers from MySQL');
+      }
+      debugPrint('Finished syncing customers from MySQL');
+
+      // sync warehouses
+      if (await syncWarehousesFromMySQL() == ReturnTypes.failed) {
+        throw Exception('Failed to sync warehouses from MySQL');
+      }
+      debugPrint('Finished syncing warehouses from MySQL');
 
       showGlobalSnackBar('Successfully synced from MySQL');
 
@@ -130,7 +146,7 @@ class MySQLService {
           arDesc: productInfo['ar_desc'],
           price: productInfo['price'],
           price2: productInfo['price2'],
-          vatPerc: productInfo['Vat_Perc'],
+          vatPerc: productInfo['vat_perc'],
           quantity: productInfo['quantity'],
           location: productInfo['location'],
           expiry: productInfo['expiry'],
@@ -167,23 +183,26 @@ class MySQLService {
       for (final row in transactions.rows) {
         final transactionInfo = row.typedAssoc();
         SqliteService.addTransaction(
-          serial: transactionInfo['Serial'],
-          transID: transactionInfo['Trans_ID'],
-          transType: transactionInfo['Trans_Type'],
-          username: transactionInfo['Username'],
-          machineID: transactionInfo['Machine_ID'],
-          fromWh: transactionInfo['FROM_WH'],
-          toWH: transactionInfo['TO_WH'],
-          lineID: transactionInfo['Line_ID'],
-          productID: transactionInfo['Product_ID'],
-          productName: transactionInfo['Product_Name'],
-          productPrice: transactionInfo['Product_Price'],
-          productQty: transactionInfo['Product_Qty'],
-          productTotal: transactionInfo['Product_Total'],
-          taxPerc: transactionInfo['Tax_Perc'],
-          discount: transactionInfo['DISC'],
-          extraDesc: transactionInfo['Extra_Desc'],
-          currency: transactionInfo['Currency'],
+          serial: transactionInfo['serial'],
+          transID: transactionInfo['trans_id'],
+          transType: transactionInfo['trans_type'],
+          username: transactionInfo['username'],
+          machineID: transactionInfo['machine_id'],
+          customer: transactionInfo['customer'],
+          fromWh: transactionInfo['from_wh'],
+          toWH: transactionInfo['to_wh'],
+          lineID: transactionInfo['line_id'],
+          productID: transactionInfo['product_id'],
+          productName: transactionInfo['product_name'],
+          productPrice: transactionInfo['product_price'],
+          productQty: transactionInfo['product_qty'],
+          productTotal: transactionInfo['product_total'],
+          taxPerc: transactionInfo['tax_perc'],
+          discount: transactionInfo['discount'],
+          extraDesc: transactionInfo['extra_desc'],
+          currency: transactionInfo['currency'],
+          reference: transactionInfo['reference'],
+          transDate: transactionInfo['trans_date'],
         );
       }
 
@@ -234,6 +253,77 @@ class MySQLService {
       return ReturnTypes.failed;
     }
   }
+
+  static Future<dynamic> syncCustomersFromMySQL() async {
+    try {
+      final conn = await MySQLConnection.createConnection(
+        host: _mysqlConfigBox.get('host'),
+        port: _mysqlConfigBox.get('port'),
+        userName: _mysqlConfigBox.get('username'),
+        password: _mysqlConfigBox.get('password'),
+        databaseName: _mysqlConfigBox.get('databaseName'),
+      );
+
+      await conn.connect();
+
+      var products = await conn.execute("SELECT * FROM customers");
+
+      await conn.close();
+
+      // clear local transaction options database and recreate
+      await SqliteService.deleteAllCustomers();
+
+      // add transaction options
+      for (final row in products.rows) {
+        final customer = row.typedAssoc();
+        SqliteService.addCustomer(
+          id: customer['id'],
+          name: customer['name'],
+        );
+      }
+
+      return ReturnTypes.success;
+    } catch (e) {
+      debugPrint(e.toString());
+      return ReturnTypes.failed;
+    }
+  }
+
+  static Future<dynamic> syncWarehousesFromMySQL() async {
+    try {
+      final conn = await MySQLConnection.createConnection(
+        host: _mysqlConfigBox.get('host'),
+        port: _mysqlConfigBox.get('port'),
+        userName: _mysqlConfigBox.get('username'),
+        password: _mysqlConfigBox.get('password'),
+        databaseName: _mysqlConfigBox.get('databaseName'),
+      );
+
+      await conn.connect();
+
+      var products = await conn.execute("SELECT * FROM warehouse");
+
+      await conn.close();
+
+      // clear local transaction options database and recreate
+      await SqliteService.deleteAllWarehouses();
+
+      // add transaction options
+      for (final row in products.rows) {
+        final warehouse = row.typedAssoc();
+        SqliteService.addWarehouse(
+          code: warehouse['code'],
+          name: warehouse['name'],
+        );
+      }
+
+      return ReturnTypes.success;
+    } catch (e) {
+      debugPrint(e.toString());
+      return ReturnTypes.failed;
+    }
+  }
+
 
   static Future<dynamic> addUser(String username, String password, String fname,
       String lname, String phone, String role) async {

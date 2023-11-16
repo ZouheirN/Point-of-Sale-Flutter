@@ -32,13 +32,20 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   Widget? _buildOptions() {
     if (_transactionType.isEmpty) return null;
 
+    _customerController.clear();
+    _fromWHController.clear();
+    _toWHController.clear();
+    _currency = 'USD (\$)';
+    _autoAdd = true;
+
     Map<String, dynamic> transactionOptionDetails = (_options
         .where((element) => element['description'] == _transactionType)
         .toList())[0];
 
-    List<Widget> columns = [const Gap(10)];
+    List<Widget> columns = [];
 
     if (transactionOptionDetails['showCustomer'] == 1) {
+      columns.add(const Gap(10));
       columns.add(
         SecondaryTextField(
           controller: _customerController,
@@ -51,9 +58,9 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           },
         ),
       );
-      columns.add(const Gap(20));
     }
     if (transactionOptionDetails['showCurrency'] == 1) {
+      columns.add(const Gap(10));
       columns.add(
         CustomDropdown<String>(
           initialItem: _currency,
@@ -65,10 +72,10 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           },
         ),
       );
-      columns.add(const Gap(20));
     }
 
     if (transactionOptionDetails['showFromWh'] == 1) {
+      columns.add(const Gap(10));
       columns.add(
         SecondaryTextField(
           controller: _fromWHController,
@@ -81,10 +88,10 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           },
         ),
       );
-      columns.add(const Gap(20));
     }
 
     if (transactionOptionDetails['showToWh'] == 1) {
+      columns.add(const Gap(10));
       columns.add(
         SecondaryTextField(
           controller: _toWHController,
@@ -97,10 +104,10 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           },
         ),
       );
-      columns.add(const Gap(20));
     }
 
     if (transactionOptionDetails['showAutoAdd'] == 1) {
+      columns.add(const Gap(10));
       columns.add(
         CheckboxListTile(
           title: const Text('Auto Add'),
@@ -112,7 +119,6 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           },
         ),
       );
-      columns.add(const Gap(20));
     }
 
     return Column(
@@ -132,6 +138,14 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
       });
     });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _customerController.dispose();
+    _fromWHController.dispose();
+    _toWHController.dispose();
+    super.dispose();
   }
 
   @override
@@ -186,6 +200,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
               },
             ),
             if (_buildOptions() != null) _buildOptions()!,
+            const Gap(20),
             PrimaryButton(
                 onPressed: _goToTransaction, child: const Text('Continue'))
           ],
