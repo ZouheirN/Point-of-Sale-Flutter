@@ -155,10 +155,10 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           const Row(
             // mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Expanded(child: Text('Barcode')),
-              Expanded(child: Text('Name')),
-              Expanded(child: Text('Quantity')),
-              Expanded(child: Text('Price')),
+              Expanded(child: Text('Barcode', textAlign: TextAlign.center)),
+              Expanded(child: Text('Name', textAlign: TextAlign.center)),
+              Expanded(child: Text('Quantity', textAlign: TextAlign.center)),
+              Expanded(child: Text('Price', textAlign: TextAlign.center)),
             ],
           ),
           const Gap(10),
@@ -166,10 +166,17 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
             Row(
               // mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Expanded(child: Text(product['barcode'])),
-                Expanded(child: Text(product['name'])),
-                Expanded(child: Text(product['quantity'].toString())),
-                Expanded(child: Text(product['price'].toString())),
+                Expanded(
+                    child:
+                        Text(product['barcode'], textAlign: TextAlign.center)),
+                Expanded(
+                    child: Text(product['name'], textAlign: TextAlign.center)),
+                Expanded(
+                    child: Text(product['quantity'].toString(),
+                        textAlign: TextAlign.center)),
+                Expanded(
+                    child: Text(product['price'].toString(),
+                        textAlign: TextAlign.center)),
               ],
             ),
         ],
