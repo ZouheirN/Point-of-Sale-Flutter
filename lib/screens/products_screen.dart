@@ -1,3 +1,4 @@
+import 'package:chips_choice/chips_choice.dart';
 import 'package:flutter/material.dart';
 import 'package:pos_app/screens/add_product_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
@@ -14,12 +15,14 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
-  bool _isLoading = true;
+  // bool _isLoading = true;
   late List _products = [];
-
   final _searchController = TextEditingController();
 
   final _refreshController = RefreshController(initialRefresh: false);
+
+  List<String> _selectedCategories = [];
+  List<String> _categories = [];
 
   void _onRefresh() async {
     // get all products from mysql
@@ -34,7 +37,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
     await SqliteService.getAllProducts().then((value) {
       setState(() {
         _products = value;
-        _isLoading = false;
+        // _isLoading = false;
+      });
+    });
+
+    //get all categories from sqlite
+    await SqliteService.getAllProductCategories().then((value) {
+      setState(() {
+        _categories = value.map((e) => e['category'].toString()).toList();
       });
     });
 
@@ -46,7 +56,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
     SqliteService.getAllProducts().then((value) {
       setState(() {
         _products = value;
-        _isLoading = false;
+        // _isLoading = false;
+      });
+    });
+
+    SqliteService.getAllProductCategories().then((value) {
+      setState(() {
+        _categories = value.map((e) => e['category'].toString()).toList();
       });
     });
 
@@ -62,7 +78,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_categories.isEmpty) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Products'),
@@ -72,6 +88,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ),
       );
     }
+
+    final filterProducts = _products
+        .where((product) =>
+            _selectedCategories.isEmpty ||
+            _selectedCategories.contains(product['category']))
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -99,7 +121,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
               onChanged: _searchProduct,
             ),
           ),
-          const SizedBox(height: 15),
+          ChipsChoice<String>.multiple(
+            value: _selectedCategories,
+            onChanged: (val) {
+              setState(() => _selectedCategories = val);
+            },
+            choiceItems: C2Choice.listFrom<String, String>(
+              source: _categories,
+              value: (i, v) => v,
+              label: (i, v) => v,
+            ),
+          ),
           Expanded(
             child: SmartRefresher(
               controller: _refreshController,
@@ -108,25 +140,38 @@ class _ProductsScreenState extends State<ProductsScreen> {
               onRefresh: _onRefresh,
               child: ListView.separated(
                 itemBuilder: (context, index) {
+                  final product = filterProducts[index];
                   return ListTile(
-                    title: Text(_products[index]['description']),
+                    title: Text(product['description']),
                     subtitle: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Barcode: ${_products[index]['barcode']}'),
-                            Text(
-                                'Price: \$${displayDouble(_products[index]['price'])}'),
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Barcode: ${product['barcode']}',
+                              ),
+                              Text(
+                                'Price: \$${displayDouble(product['price'])}',
+                              ),
+                            ],
+                          ),
                         ),
-                        const Spacer(),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                'Quantity: ${displayDouble(_products[index]['quantity'])}'),
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Quantity: ${displayDouble(product['quantity'])}',
+                              ),
+                              Text(
+                                'Category: ${product['category']}',
+                                textAlign: TextAlign.end,
+                              ),
+                            ],
+                          ),
                         )
                       ],
                     ),
@@ -138,7 +183,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   indent: 15,
                   endIndent: 15,
                 ),
-                itemCount: _products.length,
+                itemCount: filterProducts.length,
               ),
             ),
           ),

@@ -142,6 +142,7 @@ class MySQLService {
         final productInfo = row.typedAssoc();
         SqliteService.addProduct(
           barcode: productInfo['barcode'],
+          category: productInfo['category'],
           description: productInfo['description'],
           arDesc: productInfo['ar_desc'],
           price: productInfo['price'],

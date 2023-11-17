@@ -27,6 +27,7 @@ class SqliteService {
           CREATE TABLE IF NOT EXISTS products (
             barcode varchar(255) PRIMARY KEY,
             description TEXT,
+            category TEXT,
             ar_desc TEXT,
             price REAL,
             price2 REAL,
@@ -136,18 +137,20 @@ class SqliteService {
   static Future<void> addProduct({
     required String? barcode,
     required String? description,
+    required String? category,
     required String? arDesc,
     required double? price,
     required double? price2,
     required int? vatPerc,
     required double? quantity,
     required String? location,
-    required int? expiry,
+    required String? expiry,
   }) async {
     final db = await initializeDB();
     await db.insert('products', {
       'barcode': barcode,
       'description': description,
+      'category': category,
       'ar_desc': arDesc,
       'price': price,
       'price2': price2,
@@ -284,6 +287,14 @@ class SqliteService {
     final db = await initializeDB();
     final result = await db.rawQuery('''
       SELECT * FROM products
+    ''');
+    return result;
+  }
+
+  static Future<List<Map<String, dynamic>>> getAllProductCategories() async {
+    final db = await initializeDB();
+    final result = await db.rawQuery('''
+      SELECT category FROM products GROUP BY category
     ''');
     return result;
   }
