@@ -266,8 +266,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
               // fit: BoxFit.contain,
               controller: MobileScannerController(
                 detectionSpeed: DetectionSpeed.normal,
-                facing: CameraFacing.front,
-                torchEnabled: true,
+                facing: CameraFacing.back,
+                torchEnabled: false,
               ),
               onDetect: (capture) {
                 final List<Barcode> barcodes = capture.barcodes;
@@ -276,6 +276,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                   setState(() {
                     _barcodeController.text = barcode.rawValue!;
                   });
+                  _onCheckButtonPressed();
                   Navigator.of(context).pop();
                 }
               },
