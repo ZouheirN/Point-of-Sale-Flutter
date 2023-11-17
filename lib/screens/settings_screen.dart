@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:pos_app/screens/home_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+  final bool goToDashboard;
+
+  const SettingsScreen({super.key, required this.goToDashboard});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +26,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             title: const Text('Sync MySQL to Local Database'),
             trailing: const Icon(Icons.sync_rounded),
-            onTap: () => MySQLService.syncFromMySQL(context, true),
+            onTap: () => MySQLService.syncFromMySQL(context),
           ),
           ListTile(
             title: const Text('Delete Local Database'),

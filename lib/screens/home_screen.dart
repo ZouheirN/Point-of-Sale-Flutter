@@ -10,6 +10,7 @@ import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
 import 'package:pos_app/widgets/card.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+
 import '../services/userinfo_crud.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -37,7 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openSettings() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+      MaterialPageRoute(
+        builder: (context) => const SettingsScreen(
+          goToDashboard: true,
+        ),
+      ),
     );
   }
 
@@ -50,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _getData() async {
     // sync data from mysql
-    await MySQLService.syncFromMySQL(context, false);
+    await MySQLService.syncFromMySQL(null);
 
     // todo get sales made
 
@@ -103,25 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
             appBar: AppBar(
               title: const Text('Dashboard'),
               centerTitle: true,
-              actions: [
-                PopupMenuButton(
-                  onSelected: (bool result) {
-                    UserInfo.setIsAutoLoadingEnabled(result);
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: true,
-                      child: CheckboxListTile(
-                        title: const Text("Auto Refresh"),
-                        value: UserInfo.getIsAutoLoadingEnabled(),
-                        onChanged: (value) {
-                          Navigator.pop(context, value);
-                        },
-                      ),
-                    ),
-                  ],
-                )
-              ],
             ),
             drawer: _buildDrawer(),
             body: Padding(

@@ -3,8 +3,8 @@ import 'package:pos_app/services/sqlite_service.dart';
 
 void showLoadingDialog(String text, BuildContext context) => showDialog(
       context: context,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (context) => PopScope(
+        canPop: false,
         child: AlertDialog(
           title: Text(text, textAlign: TextAlign.center),
           content: const Column(

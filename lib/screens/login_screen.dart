@@ -64,8 +64,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   _goToSettings() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SettingsScreen(
+          goToDashboard: false,
+        ),
+      ),
+    );
   }
 
   @override
@@ -122,6 +127,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const Gap(30),
                   Text(_status, style: const TextStyle(color: Colors.red)),
+                  if (UserInfo.getUsername() != '')
+                    ListTile(
+                      title: Text('Continue as ${UserInfo.getUsername()}'),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded),
+                      onTap: () => Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                              builder: (context) => const HomeScreen())),
+                    ),
                   const Gap(30),
                   PrimaryButton(
                     onPressed: _login,

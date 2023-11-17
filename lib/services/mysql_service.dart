@@ -25,9 +25,9 @@ class MySQLService {
   }
 
   static Future<void> syncFromMySQL(
-      BuildContext? context, bool? showLoading) async {
+      BuildContext? context) async {
     try {
-      if (showLoading == true && context != null) {
+      if (context != null) {
         showLoadingDialog('Syncing from MySQL', context);
       }
 
@@ -73,14 +73,14 @@ class MySQLService {
 
       showGlobalSnackBar('Successfully synced from MySQL');
 
-      if (showLoading == true && context != null) {
+      if (context != null) {
         if (!context.mounted) return;
         Navigator.pop(context);
       }
     } catch (e) {
       debugPrint(e.toString());
       showGlobalSnackBar('Failed to sync from MySQL');
-      if (showLoading == true && context != null) {
+      if (context != null) {
         if (!context.mounted) return;
         Navigator.pop(context);
       }
