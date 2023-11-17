@@ -13,6 +13,7 @@ class UserInfo {
     userInfoBox.put('role', role);
     userInfoBox.put('fname', fname);
     userInfoBox.put('lname', lname);
+    userInfoBox.put('isAutoLoadingEnabled', true);
   }
 
   static String getUsername() {
@@ -21,6 +22,14 @@ class UserInfo {
 
   static String getRole() {
     return userInfoBox.get('role');
+  }
+
+  static void setIsAutoLoadingEnabled(bool isAutoLoadingEnabled) {
+    userInfoBox.put('isAutoLoadingEnabled', isAutoLoadingEnabled);
+  }
+
+  static bool getIsAutoLoadingEnabled() {
+    return userInfoBox.get('isAutoLoadingEnabled');
   }
 
   static void clearUserInfo() {

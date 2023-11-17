@@ -86,7 +86,9 @@ class SqliteService {
         await database.execute('''
         CREATE TABLE IF NOT EXISTS customers (
           id INTEGER PRIMARY KEY,
-          name TEXT
+          name TEXT,
+          address TEXT,
+          contactNumber TEXT
         );
         ''');
       },
@@ -237,6 +239,8 @@ class SqliteService {
   static Future<void> addCustomer({
     required int id,
     required String name,
+    required String address,
+    required String contactNumber,
   }) async {
     final db = await initializeDB();
     await db.insert(
@@ -244,6 +248,8 @@ class SqliteService {
       {
         'id': id,
         'name': name,
+        'address': address,
+        'contactNumber': contactNumber,
       },
     );
   }
@@ -299,6 +305,14 @@ class SqliteService {
     return result;
   }
 
+  static Future<List<Map<String, dynamic>>> getAllLowQuantityProducts() async {
+    final db = await initializeDB();
+    final result = await db.rawQuery('''
+      SELECT * FROM products WHERE quantity < 50;
+    ''');
+    return result;
+  }
+
   static Future<List<Map<String, Object?>>> getAllUserTransactions(
       String username) async {
     final db = await initializeDB();
@@ -333,6 +347,8 @@ class SqliteService {
     ''');
     return result;
   }
+
+
 
   static Future<void> deleteAllUsers() async {
     final db = await initializeDB();

@@ -23,7 +23,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             title: const Text('Sync MySQL to Local Database'),
             trailing: const Icon(Icons.sync_rounded),
-            onTap: () => MySQLService.syncFromMySQL(context),
+            onTap: () => MySQLService.syncFromMySQL(context, true),
           ),
           ListTile(
             title: const Text('Delete Local Database'),

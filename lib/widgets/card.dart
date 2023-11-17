@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 
 class PrimaryCard extends StatelessWidget {
   final String title;
@@ -30,6 +31,87 @@ class PrimaryCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class AlertCard extends StatelessWidget {
+  final List<Map<String, dynamic>>? lowQuantityProducts;
+
+  const AlertCard({super.key, this.lowQuantityProducts});
+
+  @override
+  Widget build(BuildContext context) {
+    if (lowQuantityProducts == null || lowQuantityProducts!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 5,
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Column(
+          children: [
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.warning_rounded,
+                  color: Colors.red,
+                  size: 30,
+                ),
+                Gap(10),
+                Text(
+                  'Alerts',
+                  style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red),
+                ),
+              ],
+            ),
+            _buildLowQuantityProducts(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLowQuantityProducts() {
+    if (lowQuantityProducts == null || lowQuantityProducts!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        const Text(
+          'Low Quantity Products',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        for (final product in lowQuantityProducts!)
+          ListTile(
+            title: Text(
+              product['description'],
+              style: const TextStyle(fontSize: 18),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Barcode: ${product['barcode']}',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                Text(
+                  'Quantity: ${product['quantity']}',
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

@@ -24,9 +24,12 @@ class MySQLService {
     _mysqlConfigBox.put('databaseName', databaseName);
   }
 
-  static Future<void> syncFromMySQL(BuildContext context) async {
+  static Future<void> syncFromMySQL(
+      BuildContext? context, bool? showLoading) async {
     try {
-      showLoadingDialog('Syncing from MySQL', context);
+      if (showLoading == true && context != null) {
+        showLoadingDialog('Syncing from MySQL', context);
+      }
 
       // clear local database and recreate
       await SqliteService.silentDeleteDB();
@@ -70,12 +73,17 @@ class MySQLService {
 
       showGlobalSnackBar('Successfully synced from MySQL');
 
-      if (!context.mounted) return;
-      Navigator.pop(context);
+      if (showLoading == true && context != null) {
+        if (!context.mounted) return;
+        Navigator.pop(context);
+      }
     } catch (e) {
       debugPrint(e.toString());
       showGlobalSnackBar('Failed to sync from MySQL');
-      Navigator.pop(context);
+      if (showLoading == true && context != null) {
+        if (!context.mounted) return;
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -280,6 +288,8 @@ class MySQLService {
         SqliteService.addCustomer(
           id: customer['id'],
           name: customer['name'],
+          address: customer['address'],
+          contactNumber: customer['contactNumber'],
         );
       }
 
@@ -324,7 +334,6 @@ class MySQLService {
       return ReturnTypes.failed;
     }
   }
-
 
   static Future<dynamic> addUser(String username, String password, String fname,
       String lname, String phone, String role) async {

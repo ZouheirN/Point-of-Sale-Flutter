@@ -6,8 +6,10 @@ import 'package:pos_app/screens/new_transaction_screen.dart';
 import 'package:pos_app/screens/products_screen.dart';
 import 'package:pos_app/screens/settings_screen.dart';
 import 'package:pos_app/screens/transaction_history_screen.dart';
+import 'package:pos_app/services/mysql_service.dart';
+import 'package:pos_app/services/sqlite_service.dart';
 import 'package:pos_app/widgets/card.dart';
-
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../services/userinfo_crud.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,6 +23,11 @@ class _HomeScreenState extends State<HomeScreen> {
   int _salesMade = 0;
   int _salesTarget = 0;
 
+  final _refreshController = RefreshController(initialRefresh: false);
+
+  List<Map<String, dynamic>> _lowQuantityProducts = [];
+  late Future _dataFuture;
+
   void _logout() {
     UserInfo.clearUserInfo();
     Navigator.of(context).pushReplacement(
@@ -31,6 +38,118 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openSettings() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
+  }
+
+  void _onRefresh() async {
+    // get data
+    await _getData();
+
+    _refreshController.refreshCompleted();
+  }
+
+  Future<void> _getData() async {
+    // sync data from mysql
+    await MySQLService.syncFromMySQL(context, false);
+
+    // todo get sales made
+
+    // todo get sales target
+
+    // get low quantity products
+    await SqliteService.getAllLowQuantityProducts().then((value) {
+      setState(() {
+        _lowQuantityProducts = value;
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    _dataFuture = _getData();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _dataFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Loading state
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Dashboard'),
+              centerTitle: true,
+            ),
+            body: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          // Error state
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Dashboard'),
+              centerTitle: true,
+            ),
+            body: Center(
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          );
+        } else {
+          // Data loaded successfully
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Dashboard'),
+              centerTitle: true,
+              actions: [
+                PopupMenuButton(
+                  onSelected: (bool result) {
+                    UserInfo.setIsAutoLoadingEnabled(result);
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: true,
+                      child: CheckboxListTile(
+                        title: const Text("Auto Refresh"),
+                        value: UserInfo.getIsAutoLoadingEnabled(),
+                        onChanged: (value) {
+                          Navigator.pop(context, value);
+                        },
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+            drawer: _buildDrawer(),
+            body: Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: SmartRefresher(
+                enablePullDown: true,
+                onRefresh: _onRefresh,
+                controller: _refreshController,
+                header: const ClassicHeader(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      _buildAlertCard(),
+                      PrimaryCard(
+                        title: 'Sales Target',
+                        text: 'Sales Made: $_salesMade out of $_salesTarget',
+                      ),
+                      // Add more widgets based on your data
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -65,13 +184,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.history_rounded),
-            title: const Text('Transaction History'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (context) => const TransactionHistoryScreen()),
-            )
-          ),
+              leading: const Icon(Icons.history_rounded),
+              title: const Text('Transaction History'),
+              onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => const TransactionHistoryScreen()),
+                  )),
           if (UserInfo.getRole() == 'Admin')
             ListTile(
               leading: const Icon(Icons.groups_rounded),
@@ -103,29 +221,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        centerTitle: true,
-      ),
-      drawer: _buildDrawer(),
-      body: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              PrimaryCard(
-                title: 'Sales Target',
-                text: 'Sales Made: $_salesMade out of $_salesTarget',
-              )
-            ],
-          ),
-        ),
-      ),
+  Widget _buildAlertCard() {
+    return AlertCard(
+      lowQuantityProducts: _lowQuantityProducts,
     );
   }
 }
