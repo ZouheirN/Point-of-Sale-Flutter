@@ -37,7 +37,8 @@ void showSelectCustomerDialog(
         );
 
         if (isLoading) {
-          return const AlertDialog(title: Text('Loading'),content: CircularProgressIndicator());
+          return const AlertDialog(
+              title: Text('Loading'), content: CircularProgressIndicator());
         }
 
         if (customers.isEmpty) {
@@ -80,16 +81,17 @@ void showSelectWarehouseDialog(
       builder: (context, setState) {
         // get all customers
         SqliteService.getAllWarehouses().then(
-              (value) => setState(
-                () {
-                  warehouses = value;
+          (value) => setState(
+            () {
+              warehouses = value;
               isLoading = false;
             },
           ),
         );
 
         if (isLoading) {
-          return const AlertDialog(title: Text('Loading'),content: CircularProgressIndicator());
+          return const AlertDialog(
+              title: Text('Loading'), content: CircularProgressIndicator());
         }
 
         if (warehouses.isEmpty) {

@@ -74,6 +74,7 @@ class SecondaryTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final Widget? suffixIcon;
+  final bool? enabled;
 
   const SecondaryTextField({
     super.key,
@@ -86,7 +87,9 @@ class SecondaryTextField extends StatefulWidget {
     this.onChanged,
     this.labelText,
     this.keyboardType,
-    this.inputFormatters, this.suffixIcon,
+    this.inputFormatters,
+    this.suffixIcon,
+    this.enabled,
   });
 
   @override
@@ -97,6 +100,7 @@ class _SecondaryTextFieldState extends State<SecondaryTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      enabled: widget.enabled,
       onChanged: widget.onChanged,
       cursorColor: Colors.black,
       obscureText: widget.obscureText,
@@ -108,6 +112,9 @@ class _SecondaryTextFieldState extends State<SecondaryTextField> {
         suffixIcon: widget.suffixIcon,
         hintText: widget.hintText,
         labelText: widget.labelText,
+        disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(width: 25, color: Color(0xF0F0F0FF))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: const BorderSide(width: 25, color: Color(0xF0F0F0FF))),

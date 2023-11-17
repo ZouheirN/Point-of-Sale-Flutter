@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/screens/employees_screen.dart';
 import 'package:pos_app/screens/login_screen.dart';
-import 'package:pos_app/screens/new_transaction_screen.dart';
+import 'package:pos_app/screens/transaction_type_screen.dart';
 import 'package:pos_app/screens/products_screen.dart';
 import 'package:pos_app/screens/settings_screen.dart';
 import 'package:pos_app/screens/transaction_history_screen.dart';
@@ -37,13 +37,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openSettings() {
-    Navigator.of(context).push(
+    Navigator.of(context)
+        .push(
       MaterialPageRoute(
         builder: (context) => const SettingsScreen(
           goToDashboard: true,
         ),
       ),
-    );
+    )
+        .then((value) {
+      _getData();
+    });
   }
 
   void _onRefresh() async {
@@ -55,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _getData() async {
     // sync data from mysql
-    await MySQLService.syncFromMySQL(null);
+    await MySQLService.syncFromMySQL(null, showSnackBar: false);
 
     // todo get sales made
 
@@ -166,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             title: const Text('New Transaction'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                  builder: (context) => const NewTransactionScreen()),
+                  builder: (context) => const TransactionTypeScreen()),
             ),
           ),
           ListTile(

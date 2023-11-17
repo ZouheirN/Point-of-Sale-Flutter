@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pos_app/screens/add_product_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
+import 'package:pos_app/services/userinfo_crud.dart';
 import 'package:pos_app/widgets/global_snackbar.dart';
 import 'package:pos_app/widgets/textfields.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -99,14 +100,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
       appBar: AppBar(
         title: const Text('Products'),
         actions: [
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const AddProductScreen(),
+          if (UserInfo.getRole() == "Admin")
+            IconButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AddProductScreen(),
+                ),
               ),
+              icon: const Icon(Icons.add),
             ),
-            icon: const Icon(Icons.add),
-          ),
         ],
       ),
       body: Column(

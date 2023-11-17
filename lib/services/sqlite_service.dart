@@ -31,7 +31,7 @@ class SqliteService {
             ar_desc TEXT,
             price REAL,
             price2 REAL,
-            Vat_Perc INTEGER,
+            vat_perc INTEGER,
             quantity REAL,
             location TEXT,
             expiry TEXT
@@ -297,6 +297,15 @@ class SqliteService {
     return result;
   }
 
+  static Future<Map<String, Object?>?> getProduct(String barcode) async {
+    final db = await initializeDB();
+    final result = await db.rawQuery('''
+      SELECT * FROM products where barcode = "$barcode"
+    ''');
+    if (result.isEmpty) return null;
+    return result[0];
+  }
+
   static Future<List<Map<String, dynamic>>> getAllProductCategories() async {
     final db = await initializeDB();
     final result = await db.rawQuery('''
@@ -318,7 +327,7 @@ class SqliteService {
     final db = await initializeDB();
 
     final result = await db.rawQuery('''
-      SELECT * FROM transactions where username = '$username' 
+      SELECT * FROM transactions where username = "$username"
     ''');
 
     return result;
@@ -347,8 +356,6 @@ class SqliteService {
     ''');
     return result;
   }
-
-
 
   static Future<void> deleteAllUsers() async {
     final db = await initializeDB();

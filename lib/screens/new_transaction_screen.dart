@@ -1,230 +1,283 @@
-import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pos_app/services/sqlite_service.dart';
-import 'package:pos_app/widgets/buttons.dart';
-import 'package:pos_app/widgets/dialogs.dart';
+import 'package:pos_app/widgets/global_snackbar.dart';
 import 'package:pos_app/widgets/textfields.dart';
 
 class NewTransactionScreen extends StatefulWidget {
-  const NewTransactionScreen({super.key});
+  final String customer;
+  final String currency;
+  final String fromWH;
+  final String toWH;
+
+  const NewTransactionScreen({
+    super.key,
+    required this.customer,
+    required this.currency,
+    required this.fromWH,
+    required this.toWH,
+  });
 
   @override
   State<NewTransactionScreen> createState() => _NewTransactionScreenState();
 }
 
 class _NewTransactionScreenState extends State<NewTransactionScreen> {
-  late final List<Map<String, dynamic>> _options = [];
-  bool _isLoading = true;
+  final _barcodeController = TextEditingController();
+  final _productNameController = TextEditingController();
+  final _productPriceController = TextEditingController();
+  final _productLocationController = TextEditingController();
+  final _productQuantityController = TextEditingController();
+  final _selectedQuantityController = TextEditingController();
 
-  final _customerController = TextEditingController();
-  String _currency = 'USD (\$)';
-  final _fromWHController = TextEditingController();
-  final _toWHController = TextEditingController();
-  bool _autoAdd = true;
-
-  final _formKey = GlobalKey<FormState>();
-  String _transactionType = '';
-
-  void _goToTransaction() {
-    if (_formKey.currentState!.validate()) {}
-  }
-
-  Widget? _buildOptions() {
-    if (_transactionType.isEmpty) return null;
-
-    _customerController.clear();
-    _fromWHController.clear();
-    _toWHController.clear();
-    _currency = 'USD (\$)';
-    _autoAdd = true;
-
-    Map<String, dynamic> transactionOptionDetails = (_options
-        .where((element) => element['description'] == _transactionType)
-        .toList())[0];
-
-    List<Widget> columns = [];
-
-    if (transactionOptionDetails['showCustomer'] == 1) {
-      columns.add(const Gap(10));
-      columns.add(
-        SecondaryTextField(
-          controller: _customerController,
-          labelText: 'Customer',
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter a customer';
-            }
-            return null;
-          },
-          suffixIcon: IconButton(
-            onPressed: () {
-              showSelectCustomerDialog(context, _customerController);
-            },
-            icon: const Icon(Icons.search),
-          ),
-        ),
-      );
-    }
-    if (transactionOptionDetails['showCurrency'] == 1) {
-      columns.add(const Gap(10));
-      columns.add(
-        CustomDropdown<String>(
-          initialItem: _currency,
-          items: const ['USD (\$)', 'LBP (LL)'],
-          onChanged: (value) {
-            setState(() {
-              _currency = value;
-            });
-          },
-        ),
-      );
-    }
-
-    if (transactionOptionDetails['showFromWh'] == 1) {
-      columns.add(const Gap(10));
-      columns.add(
-        SecondaryTextField(
-          controller: _fromWHController,
-          labelText: 'From Warehouse',
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter a warehouse';
-            }
-            return null;
-          },
-          suffixIcon: IconButton(
-            onPressed: () {
-              showSelectWarehouseDialog(context, _fromWHController);
-            },
-            icon: const Icon(Icons.search),
-          )
-        ),
-      );
-    }
-
-    if (transactionOptionDetails['showToWh'] == 1) {
-      columns.add(const Gap(10));
-      columns.add(
-        SecondaryTextField(
-          controller: _toWHController,
-          labelText: 'To Warehouse',
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter a warehouse';
-            }
-            return null;
-          },
-          suffixIcon: IconButton(
-            onPressed: () {
-              showSelectWarehouseDialog(context, _toWHController);
-            },
-            icon: const Icon(Icons.search),
-          )
-        ),
-      );
-    }
-
-    if (transactionOptionDetails['showAutoAdd'] == 1) {
-      columns.add(const Gap(10));
-      columns.add(
-        CheckboxListTile(
-          title: const Text('Auto Add'),
-          value: _autoAdd,
-          onChanged: (value) {
-            setState(() {
-              _autoAdd = value!;
-            });
-          },
-        ),
-      );
-    }
-
-    return Column(
-      children: columns,
-    );
-  }
+  List _listOfProducts = [];
 
   @override
   void initState() {
-    SqliteService.getTransactionOptions().then((value) {
-      for (var i = 0; i < value.length; i++) {
-        _options.add(value[i]);
-      }
-
-      setState(() {
-        _isLoading = false;
-      });
-    });
+    // print all values
+    print(widget.customer);
+    print(widget.currency);
+    print(widget.fromWH);
+    print(widget.toWH);
     super.initState();
   }
 
   @override
   void dispose() {
-    _customerController.dispose();
-    _fromWHController.dispose();
-    _toWHController.dispose();
+    _barcodeController.dispose();
+    _productQuantityController.dispose();
+    _selectedQuantityController.dispose();
+    _productNameController.dispose();
+    _productPriceController.dispose();
+    _productLocationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('New Transaction'),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    } else if (_options.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('New Transaction'),
-        ),
-        body: const Center(
-          child: Text('No transaction types found'),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Transaction'),
+        actions: [
+          IconButton(
+              onPressed: _onSaveButtonPressed,
+              icon: const Icon(Icons.save_rounded))
+        ],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(15),
-          children: [
-            const Text(
-              'Transaction Type',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20),
+      body: ListView(
+        padding: const EdgeInsets.all(15),
+        children: [
+          SecondaryTextField(
+            labelText: 'Barcode',
+            controller: _barcodeController,
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                    onPressed: _onBarcodeButtonPressed,
+                    icon: const Icon(Icons.camera_alt_rounded)),
+                IconButton(
+                    onPressed: _onCheckButtonPressed,
+                    icon: const Icon(Icons.check_rounded)),
+              ],
             ),
-            CustomDropdown<String>.search(
-              hintText: 'Select a transaction type',
-              items: _options.map((e) => e['description'] as String).toList(),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please select a transaction type';
-                }
-                return null;
-              },
-              onChanged: (value) {
-                setState(() {
-                  _transactionType = value;
-                });
-              },
-            ),
-            if (_buildOptions() != null) _buildOptions()!,
-            const Gap(20),
-            PrimaryButton(
-                onPressed: _goToTransaction, child: const Text('Continue'))
-          ],
-        ),
+          ),
+          const Gap(20),
+          SecondaryTextField(
+            enabled: false,
+            labelText: 'Name',
+            controller: _productNameController,
+          ),
+          const Gap(20),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: SecondaryTextField(
+                  enabled: false,
+                  labelText: 'Price',
+                  controller: _productPriceController,
+                ),
+              ),
+              const Gap(20),
+              Expanded(
+                flex: 3,
+                child: SecondaryTextField(
+                  enabled: false,
+                  labelText: 'Location',
+                  controller: _productLocationController,
+                ),
+              ),
+            ],
+          ),
+          const Gap(20),
+          Row(
+            children: [
+              Expanded(
+                child: SecondaryTextField(
+                  enabled: false,
+                  labelText: 'Av. Quantity',
+                  controller: _productQuantityController,
+                ),
+              ),
+              const Gap(20),
+              Expanded(
+                child: SecondaryTextField(
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  labelText: 'Quantity',
+                  controller: _selectedQuantityController,
+                ),
+              ),
+              const Gap(20),
+              IconButton(
+                  onPressed: _onAddButtonPressed, icon: const Icon(Icons.add))
+            ],
+          ),
+          const Gap(20),
+          _buildListOfProducts()
+        ],
       ),
     );
   }
+
+  Widget _buildListOfProducts() {
+    return Container(
+      alignment: Alignment.center,
+      child: ListView(
+        shrinkWrap: true,
+        physics: const ClampingScrollPhysics(),
+        children: [
+          const Row(
+            // mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Expanded(child: Text('Barcode')),
+              Expanded(child: Text('Name')),
+              Expanded(child: Text('Quantity')),
+              Expanded(child: Text('Price')),
+            ],
+          ),
+          const Gap(10),
+          for (var product in _listOfProducts)
+            Row(
+              // mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(child: Text(product['barcode'])),
+                Expanded(child: Text(product['name'])),
+                Expanded(child: Text(product['quantity'].toString())),
+                Expanded(child: Text(product['price'].toString())),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onCheckButtonPressed() async {
+    _productNameController.clear();
+    _productPriceController.clear();
+    _productQuantityController.clear();
+    _productLocationController.clear();
+
+    // get product from sqlite
+    dynamic product =
+        await SqliteService.getProduct(_barcodeController.text.trim());
+
+    if (product == null) {
+      if (!mounted) return;
+      showGlobalSnackBar('Product not found');
+      return;
+    }
+
+    setState(() {
+      _productNameController.text = product['description'];
+      _productPriceController.text = product['price2'].toString();
+      _productQuantityController.text = product['quantity'].toString();
+      _productLocationController.text = product['location'];
+    });
+  }
+
+  Future<void> _onAddButtonPressed() async {
+    await _onCheckButtonPressed();
+
+    // check if barcode, name, price, av.quantity, and quantity are empty
+    if (_barcodeController.text == '') {
+      showGlobalSnackBar('Barcode is empty');
+      return;
+    }
+
+    if (_productNameController.text == '') {
+      showGlobalSnackBar('Name is empty');
+      return;
+    }
+
+    if (_productPriceController.text == '') {
+      showGlobalSnackBar('Price is empty');
+      return;
+    }
+
+    if (_productQuantityController.text == '') {
+      showGlobalSnackBar('Av. Quantity is empty');
+      return;
+    }
+
+    if (_selectedQuantityController.text == '') {
+      showGlobalSnackBar('Quantity is empty');
+      return;
+    }
+
+    // add the product to the list
+    _listOfProducts.add({
+      "barcode": _barcodeController.text.trim(),
+      "name": _productNameController.text.trim(),
+      "quantity": double.parse(_selectedQuantityController.text.trim()),
+      "price": double.parse(_selectedQuantityController.text.trim()) *
+          double.parse(_productPriceController.text)
+    });
+
+    // clear the fields
+    _productNameController.clear();
+    _productPriceController.clear();
+    _productQuantityController.clear();
+    _productLocationController.clear();
+  }
+
+  void _onBarcodeButtonPressed() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Scan Barcode"),
+          content: SizedBox(
+            height: 300,
+            width: double.maxFinite,
+            child: MobileScanner(
+              // fit: BoxFit.contain,
+              controller: MobileScannerController(
+                detectionSpeed: DetectionSpeed.normal,
+                facing: CameraFacing.front,
+                torchEnabled: true,
+              ),
+              onDetect: (capture) {
+                final List<Barcode> barcodes = capture.barcodes;
+                for (final barcode in barcodes) {
+                  debugPrint('Barcode found! ${barcode.rawValue}');
+                  setState(() {
+                    _barcodeController.text = barcode.rawValue!;
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _onSaveButtonPressed() {}
 }

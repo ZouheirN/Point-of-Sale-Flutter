@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pos_app/screens/new_transaction_screen.dart';
+import 'package:pos_app/screens/transaction_type_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
 import 'package:pos_app/services/userinfo_crud.dart';
@@ -78,7 +78,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           IconButton(
             onPressed: () => Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (context) => const NewTransactionScreen(),
+                builder: (context) => const TransactionTypeScreen(),
               ),
             ),
             icon: const Icon(Icons.add),

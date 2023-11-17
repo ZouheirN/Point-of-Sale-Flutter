@@ -24,8 +24,8 @@ class MySQLService {
     _mysqlConfigBox.put('databaseName', databaseName);
   }
 
-  static Future<void> syncFromMySQL(
-      BuildContext? context) async {
+  static Future<void> syncFromMySQL(BuildContext? context,
+      {bool showSnackBar = true}) async {
     try {
       if (context != null) {
         showLoadingDialog('Syncing from MySQL', context);
@@ -71,7 +71,9 @@ class MySQLService {
       }
       debugPrint('Finished syncing warehouses from MySQL');
 
-      showGlobalSnackBar('Successfully synced from MySQL');
+      if (showSnackBar) {
+        showGlobalSnackBar('Successfully synced from MySQL');
+      }
 
       if (context != null) {
         if (!context.mounted) return;
