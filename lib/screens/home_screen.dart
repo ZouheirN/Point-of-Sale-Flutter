@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/screens/employees_screen.dart';
 import 'package:pos_app/screens/login_screen.dart';
-import 'package:pos_app/screens/transaction_type_screen.dart';
 import 'package:pos_app/screens/products_screen.dart';
 import 'package:pos_app/screens/settings_screen.dart';
 import 'package:pos_app/screens/transaction_history_screen.dart';
+import 'package:pos_app/screens/transaction_type_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
+import 'package:pos_app/services/unsynced_products_crud.dart';
 import 'package:pos_app/widgets/card.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _refreshController = RefreshController(initialRefresh: false);
 
   List<Map<String, dynamic>> _lowQuantityProducts = [];
+  List _unsyncedProducts = [];
   late Future _dataFuture;
 
   void _logout() {
@@ -70,6 +72,11 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _lowQuantityProducts = value;
       });
+    });
+
+    // get unsynced products
+    setState(() {
+      _unsyncedProducts = UnSyncedProducts.getUnSyncedProducts();
     });
   }
 
@@ -170,30 +177,37 @@ class _HomeScreenState extends State<HomeScreen> {
             title: const Text('New Transaction'),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                  builder: (context) => const TransactionTypeScreen()),
+                builder: (context) => const TransactionTypeScreen(),
+              ),
             ),
           ),
           ListTile(
-              leading: const Icon(Icons.history_rounded),
-              title: const Text('Transaction History'),
-              onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (context) => const TransactionHistoryScreen()),
-                  )),
+            leading: const Icon(Icons.history_rounded),
+            title: const Text('Transaction History'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const TransactionHistoryScreen(),
+              ),
+            ),
+          ),
           if (UserInfo.getRole() == 'Admin')
             ListTile(
               leading: const Icon(Icons.groups_rounded),
               title: const Text('Employees'),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                    builder: (context) => const EmployeesScreen()),
+                  builder: (context) => const EmployeesScreen(),
+                ),
               ),
             ),
           ListTile(
             leading: const Icon(Icons.inventory_2_rounded),
             title: const Text('Products'),
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => const ProductsScreen())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const ProductsScreen(),
+              ),
+            ),
           ),
           const Divider(indent: 15, endIndent: 15),
           ListTile(

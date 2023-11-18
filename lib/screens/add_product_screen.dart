@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:pos_app/services/mysql_service.dart';
+import 'package:pos_app/services/unsynced_products_crud.dart';
+import 'package:pos_app/widgets/buttons.dart';
+import 'package:pos_app/widgets/dialogs.dart';
+import 'package:pos_app/widgets/global_snackbar.dart';
 import 'package:pos_app/widgets/textfields.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -25,16 +31,37 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // check box variables
-  bool _isBarcodeChecked = false;
-  bool _isNameChecked = false;
-  bool _isCategoryChecked = false;
+  bool _isBarcodeChecked = true;
+  bool _isNameChecked = true;
+  bool _isCategoryChecked = true;
   bool _isArabicNameChecked = false;
-  bool _isPriceChecked = false;
-  bool _isPrice2Checked = false;
-  bool _isVatPercChecked = false;
-  bool _isQuantityChecked = false;
+  bool _isPriceChecked = true;
+  bool _isPrice2Checked = true;
+  bool _isVatPercChecked = true;
+  bool _isQuantityChecked = true;
   bool _isLocationChecked = false;
   bool _isExpiryChecked = false;
+
+  @override
+  void initState() {
+    _vatPercController.text = '11';
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _barcodeController.dispose();
+    _nameController.dispose();
+    _categoryController.dispose();
+    _arabicNameController.dispose();
+    _priceController.dispose();
+    _price2Controller.dispose();
+    _vatPercController.dispose();
+    _quantityController.dispose();
+    _locationController.dispose();
+    _expiryController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +97,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             icon: const Icon(Icons.camera_alt_rounded)),
                       ],
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a barcode';
+                      }
+                      return null;
+                    },
                   ),
                 ),
               ],
@@ -86,7 +119,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _isNameChecked = value!;
                   });
                 },
-              )
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a name';
+                }
+                return null;
+              },
             ),
             const Gap(15),
             SecondaryTextField(
@@ -100,22 +139,27 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _isCategoryChecked = value!;
                   });
                 },
-              )
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a category';
+                }
+                return null;
+              },
             ),
             const Gap(15),
             SecondaryTextField(
-              formKey: _formKey,
-              controller: _arabicNameController,
-              labelText: 'Arabic Name',
-              icon: Checkbox(
-                value: _isArabicNameChecked,
-                onChanged: (value) {
-                  setState(() {
-                    _isArabicNameChecked = value!;
-                  });
-                },
-              )
-            ),
+                formKey: _formKey,
+                controller: _arabicNameController,
+                labelText: 'Arabic Name',
+                icon: Checkbox(
+                  value: _isArabicNameChecked,
+                  onChanged: (value) {
+                    setState(() {
+                      _isArabicNameChecked = value!;
+                    });
+                  },
+                )),
             const Gap(15),
             SecondaryTextField(
               formKey: _formKey,
@@ -128,7 +172,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _isPriceChecked = value!;
                   });
                 },
-              )
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a price';
+                }
+
+                return null;
+              },
             ),
             const Gap(15),
             SecondaryTextField(
@@ -142,7 +197,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _isPrice2Checked = value!;
                   });
                 },
-              )
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a price';
+                }
+
+                return null;
+              },
             ),
             const Gap(15),
             SecondaryTextField(
@@ -156,7 +222,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _isVatPercChecked = value!;
                   });
                 },
-              )
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
             ),
             const Gap(15),
             SecondaryTextField(
@@ -170,22 +240,31 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _isQuantityChecked = value!;
                   });
                 },
-              )
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a quantity';
+                }
+                return null;
+              },
             ),
             const Gap(15),
             SecondaryTextField(
-              formKey: _formKey,
-              controller: _locationController,
-              labelText: 'Location',
-              icon: Checkbox(
-                value: _isLocationChecked,
-                onChanged: (value) {
-                  setState(() {
-                    _isLocationChecked = value!;
-                  });
-                },
-              )
-            ),
+                formKey: _formKey,
+                controller: _locationController,
+                labelText: 'Location',
+                icon: Checkbox(
+                  value: _isLocationChecked,
+                  onChanged: (value) {
+                    setState(() {
+                      _isLocationChecked = value!;
+                    });
+                  },
+                )),
             const Gap(15),
             SecondaryTextField(
               formKey: _formKey,
@@ -198,23 +277,101 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _isExpiryChecked = value!;
                   });
                 },
-              )
+              ),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.calendar_month_rounded),
+                onPressed: _showDatePicker,
+              ),
             ),
             const Gap(15),
-            ElevatedButton(
-              onPressed: () {
-                // todo save to sqlite
-                // todo save to mysql
-                // todo sync from mysql
-                // todo show snackbar
-                // todo pop screen
-              },
+            PrimaryButton(
+              onPressed: _onSaveButtonPressed,
               child: const Text('Save'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _onSaveButtonPressed() async {
+    if (_formKey.currentState!.validate()) {
+      showLoadingDialog('Adding Product', context);
+
+      final barcode = _barcodeController.text.trim();
+      final name = _nameController.text.trim();
+      final category = _categoryController.text.trim();
+      final arabicName = _arabicNameController.text.trim();
+      final price = double.parse(_priceController.text.trim());
+      final price2 = double.parse(_price2Controller.text.trim());
+      final vatPerc = double.parse(_vatPercController.text.trim());
+      final quantity = double.parse(_quantityController.text.trim());
+      final location = _locationController.text.trim();
+      final expiryDate = _expiryController.text.trim();
+
+      // add to unsynced products
+      UnSyncedProducts.addUnSyncedProduct(
+        barcode: barcode,
+        name: name,
+        category: category,
+        arabicName: arabicName,
+        price: price,
+        price2: price2,
+        vatPerc: vatPerc,
+        quantity: quantity,
+        location: location,
+        expiryDate: expiryDate,
+      );
+
+      // try to save to mysql
+      final result = await MySQLService.addProduct(
+        barcode: barcode,
+        name: name,
+        category: category,
+        arabicName: arabicName,
+        price: price,
+        price2: price2,
+        vatPerc: vatPerc,
+        quantity: quantity,
+        location: location,
+        expiryDate: expiryDate,
+      );
+
+      if (result == ReturnTypes.duplicate) {
+        showGlobalSnackBar('Product already exists');
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        return;
+      }
+
+      if (result == ReturnTypes.failed) {
+        showGlobalSnackBar('Failed to add product');
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Failed to add product'),
+                content: const Text(
+                    'Your product has been added to the un-synced products list. Check the dashboard to sync it later or remove it.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Ok'),
+                  ),
+                ],
+              );
+            });
+        return;
+      }
+
+      showGlobalSnackBar('Product added successfully');
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    }
   }
 
   void _onBarcodeButtonPressed() {
@@ -248,5 +405,22 @@ class _AddProductScreenState extends State<AddProductScreen> {
         );
       },
     );
+  }
+
+  void _showDatePicker() {
+    showDatePicker(
+      helpText: 'Select Expiry Date',
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1970),
+      lastDate: DateTime(2100),
+    ).then((value) {
+      if (value != null) {
+        _expiryController.text = value.toString().split(' ')[0];
+        setState(() {
+          _isExpiryChecked = true;
+        });
+      }
+    });
   }
 }

@@ -3,7 +3,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:pos_app/screens/login_screen.dart';
 import 'package:pos_app/services/sqlite_service.dart';
-import 'package:pos_app/services/userinfo_crud.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +11,7 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox('mysql_config');
   await Hive.openBox('userInfo');
+  await Hive.openBox('unSyncedProducts');
 
   // SQFLite
   await SqliteService.initializeDB();

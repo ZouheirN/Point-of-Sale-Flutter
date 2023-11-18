@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pos_app/screens/add_product_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
+import 'package:pos_app/services/unsynced_products_crud.dart';
 import 'package:pos_app/services/userinfo_crud.dart';
 import 'package:pos_app/widgets/global_snackbar.dart';
 import 'package:pos_app/widgets/textfields.dart';

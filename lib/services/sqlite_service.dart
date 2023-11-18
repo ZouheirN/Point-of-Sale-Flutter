@@ -33,7 +33,7 @@ class SqliteService {
             ar_desc TEXT,
             price REAL,
             price2 REAL,
-            vat_perc INTEGER,
+            vat_perc REAL,
             quantity REAL,
             location TEXT,
             expiry TEXT
@@ -145,7 +145,7 @@ class SqliteService {
     required String? arDesc,
     required double? price,
     required double? price2,
-    required int? vatPerc,
+    required double? vatPerc,
     required double? quantity,
     required String? location,
     required String? expiry,

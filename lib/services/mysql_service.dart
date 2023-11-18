@@ -3,6 +3,7 @@ import 'package:gap/gap.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mysql_client/mysql_client.dart';
 import 'package:pos_app/services/sqlite_service.dart';
+import 'package:pos_app/services/unsynced_products_crud.dart';
 import 'package:pos_app/widgets/dialogs.dart';
 import 'package:pos_app/widgets/global_snackbar.dart';
 
@@ -153,6 +154,21 @@ class MySQLService {
       // add products
       for (final row in products.rows) {
         final productInfo = row.typedAssoc();
+        // print(
+        //   // print all runtime types
+        //   {
+        //     'barcode': productInfo['barcode'].runtimeType,
+        //     'category': productInfo['category'].runtimeType,
+        //     'description': productInfo['description'].runtimeType,
+        //     'ar_desc': productInfo['ar_desc'].runtimeType,
+        //     'price': productInfo['price'].runtimeType,
+        //     'price2': productInfo['price2'].runtimeType,
+        //     'vat_perc': productInfo['vat_perc'].runtimeType,
+        //     'quantity': productInfo['quantity'].runtimeType,
+        //     'location': productInfo['location'].runtimeType,
+        //     'expiry': productInfo['expiry'].runtimeType,
+        //   }
+        // );
         SqliteService.addProduct(
           barcode: productInfo['barcode'],
           category: productInfo['category'],
@@ -367,6 +383,74 @@ class MySQLService {
         phone: phone,
         role: role,
       );
+
+      return ReturnTypes.success;
+    } catch (e) {
+      debugPrint(e.toString());
+
+      if (e.toString().contains('Duplicate entry')) {
+        return ReturnTypes.duplicate;
+      }
+
+      return ReturnTypes.failed;
+    }
+  }
+
+  static Future<dynamic> addProduct({
+    required String barcode,
+    required String name,
+    required String category,
+    String? arabicName,
+    required double price,
+    required double price2,
+    required double vatPerc,
+    required double quantity,
+    String? location,
+    String? expiryDate,
+  }) async {
+    try {
+      final conn = await MySQLConnection.createConnection(
+        host: _mysqlConfigBox.get('host'),
+        port: _mysqlConfigBox.get('port'),
+        userName: _mysqlConfigBox.get('username'),
+        password: _mysqlConfigBox.get('password'),
+        databaseName: _mysqlConfigBox.get('databaseName'),
+      );
+      await conn.connect();
+
+      var stmt = await conn.prepare(
+        "INSERT INTO products (barcode, description, category, ar_desc, price, price2, vat_perc, quantity, location, expiry) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      );
+      await stmt.execute([
+        barcode,
+        name,
+        category,
+        arabicName,
+        price,
+        price2,
+        vatPerc,
+        quantity,
+        location,
+        expiryDate,
+      ]);
+      await stmt.deallocate();
+      await conn.close();
+
+      SqliteService.addProduct(
+        barcode: barcode,
+        category: category,
+        description: name,
+        arDesc: arabicName,
+        price: price,
+        price2: price2,
+        vatPerc: vatPerc,
+        quantity: quantity,
+        location: location,
+        expiry: expiryDate,
+      );
+
+      // remove from un-synced products
+      UnSyncedProducts.deleteUnSyncedProduct(barcode);
 
       return ReturnTypes.success;
     } catch (e) {
