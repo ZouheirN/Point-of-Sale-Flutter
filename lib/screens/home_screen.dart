@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     });
 
-    // get unsynced products
+    // get un-synced products
     setState(() {
       _unsyncedProducts = UnSyncedProducts.getUnSyncedProducts();
     });

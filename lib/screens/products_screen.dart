@@ -1,9 +1,9 @@
 import 'package:chips_choice/chips_choice.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:pos_app/screens/add_product_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
-import 'package:pos_app/services/unsynced_products_crud.dart';
 import 'package:pos_app/services/userinfo_crud.dart';
 import 'package:pos_app/widgets/global_snackbar.dart';
 import 'package:pos_app/widgets/textfields.dart';
@@ -178,6 +178,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         )
                       ],
                     ),
+                    onTap: () => _showProductInfo(product),
                   );
                 },
                 separatorBuilder: (context, index) => const Divider(
@@ -215,6 +216,63 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   .contains(query.toLowerCase()))
           .toList();
     });
+  }
+
+  // show bottom sheet of product information
+  void _showProductInfo(Map product) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(15),
+          child: ListView(
+            children: [
+              Text(
+                product['description'],
+                style: const TextStyle(fontSize: 20),
+              ),
+              const Gap(10),
+              Text(
+                'Arabic Name: ${product['ar_desc']}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Barcode: ${product['barcode']}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Category: ${product['category']}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Price: \$${displayDouble(product['price'])}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Price2: \$${displayDouble(product['price2'])}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Vat Perc: \$${displayDouble(product['vat_perc'])}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Quantity: ${displayDouble(product['quantity'])}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Location: ${product['location']}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Expiry Date: ${product['expiry']}',
+                style: const TextStyle(fontSize: 20),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
 // function to display string of double and only with 2 decimal places if they are not 0
