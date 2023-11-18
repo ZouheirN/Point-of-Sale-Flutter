@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:pos_app/widgets/dialogs.dart';
@@ -385,5 +387,41 @@ class SqliteService {
   static Future<void> deleteAllWarehouses() async {
     final db = await initializeDB();
     await db.delete('warehouse');
+  }
+
+  static Future<void> backupDB() async {
+    try {
+      String databasesPath = await getDatabasesPath();
+      String sourcePath = join(databasesPath, 'database.db');
+      String backupPath = join(databasesPath, 'backup.db');
+
+      // Open the source database file
+      File sourceFile = File(sourcePath);
+
+      // Create a backup by copying the source file
+      await sourceFile.copy(backupPath);
+
+      print('Database backup completed.');
+    } catch (e) {
+      print('Error during database backup: $e');
+    }
+  }
+
+  static Future<void> restoreDB() async {
+    try {
+      String databasesPath = await getDatabasesPath();
+      String sourcePath = join(databasesPath, 'backup.db');
+      String restorePath = join(databasesPath, 'database.db');
+
+      // Open the source backup file
+      File sourceFile = File(sourcePath);
+
+      // Restore the database by copying the backup file
+      await sourceFile.copy(restorePath);
+
+      print('Database restore completed.');
+    } catch (e) {
+      print('Error during database restore: $e');
+    }
   }
 }

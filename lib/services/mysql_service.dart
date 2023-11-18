@@ -26,6 +26,8 @@ class MySQLService {
 
   static Future<void> syncFromMySQL(BuildContext? context,
       {bool showSnackBar = true}) async {
+    SqliteService.backupDB();
+
     try {
       if (context != null) {
         showLoadingDialog('Syncing from MySQL', context);
@@ -82,6 +84,7 @@ class MySQLService {
     } catch (e) {
       debugPrint(e.toString());
       showGlobalSnackBar('Failed to sync from MySQL');
+      SqliteService.restoreDB();
       if (context != null) {
         if (!context.mounted) return;
         Navigator.pop(context);

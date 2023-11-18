@@ -68,7 +68,7 @@ class SecondaryTextField extends StatefulWidget {
   final GlobalKey<FormState>? formKey;
   final bool obscureText;
   final String? Function(String?)? validator;
-  final Icon? icon;
+  final Widget? icon;
   final void Function(String)? onChanged;
   final String? labelText;
   final TextInputType? keyboardType;
