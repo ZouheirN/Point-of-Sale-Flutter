@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_fgbg/flutter_fgbg.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/screens/employees_screen.dart';
 import 'package:pos_app/screens/login_screen.dart';
@@ -88,65 +89,72 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _dataFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // Loading state
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Dashboard'),
-              centerTitle: true,
-            ),
-            body: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          // Error state
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Dashboard'),
-              centerTitle: true,
-            ),
-            body: Center(
-              child: Text('Error: ${snapshot.error}'),
-            ),
-          );
-        } else {
-          // Data loaded successfully
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Dashboard'),
-              centerTitle: true,
-            ),
-            drawer: _buildDrawer(),
-            body: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: SmartRefresher(
-                enablePullDown: true,
-                onRefresh: _onRefresh,
-                controller: _refreshController,
-                header: const ClassicHeader(),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      _buildAlertCard(),
-                      PrimaryCard(
-                        title: 'Sales Target',
-                        text: 'Sales Made: $_salesMade out of $_salesTarget',
-                      ),
-                      // Add more widgets based on your data
-                    ],
+    return FGBGNotifier(
+      onEvent: (event) {
+        if (event == FGBGType.foreground) {
+          _getData();
+        }
+      },
+      child: FutureBuilder(
+        future: _dataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Loading state
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Dashboard'),
+                centerTitle: true,
+              ),
+              body: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            // Error state
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Dashboard'),
+                centerTitle: true,
+              ),
+              body: Center(
+                child: Text('Error: ${snapshot.error}'),
+              ),
+            );
+          } else {
+            // Data loaded successfully
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Dashboard'),
+                centerTitle: true,
+              ),
+              drawer: _buildDrawer(),
+              body: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: SmartRefresher(
+                  enablePullDown: true,
+                  onRefresh: _onRefresh,
+                  controller: _refreshController,
+                  header: const ClassicHeader(),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        _buildAlertCard(),
+                        PrimaryCard(
+                          title: 'Sales Target',
+                          text: 'Sales Made: $_salesMade out of $_salesTarget',
+                        ),
+                        // Add more widgets based on your data
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 

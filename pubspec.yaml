@@ -41,6 +41,7 @@ dependencies:
   pull_to_refresh: ^2.0.0
   mobile_scanner: ^3.5.2
   chips_choice: ^3.0.1
+  flutter_fgbg: ^0.3.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
