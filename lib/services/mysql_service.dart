@@ -3,7 +3,7 @@ import 'package:gap/gap.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mysql_client/mysql_client.dart';
 import 'package:pos_app/services/sqlite_service.dart';
-import 'package:pos_app/services/unsynced_products_crud.dart';
+import 'package:pos_app/services/userinfo_crud.dart';
 import 'package:pos_app/widgets/dialogs.dart';
 import 'package:pos_app/widgets/global_snackbar.dart';
 
@@ -27,6 +27,7 @@ class MySQLService {
 
   static Future<void> syncFromMySQL(BuildContext? context,
       {bool showSnackBar = true}) async {
+    // backup local database
     SqliteService.backupDB();
 
     try {
@@ -74,6 +75,9 @@ class MySQLService {
       }
       debugPrint('Finished syncing warehouses from MySQL');
 
+      // save sync date
+      UserInfo.setLastSynced(DateTime.now());
+
       if (showSnackBar) {
         showGlobalSnackBar('Successfully synced from MySQL');
       }
@@ -85,6 +89,7 @@ class MySQLService {
     } catch (e) {
       debugPrint(e.toString());
       showGlobalSnackBar('Failed to sync from MySQL');
+      // restore local database if failed
       SqliteService.restoreDB();
       if (context != null) {
         if (!context.mounted) return;
@@ -352,114 +357,6 @@ class MySQLService {
       return ReturnTypes.success;
     } catch (e) {
       debugPrint(e.toString());
-      return ReturnTypes.failed;
-    }
-  }
-
-  static Future<dynamic> addUser(String username, String password, String fname,
-      String lname, String phone, String role) async {
-    try {
-      final conn = await MySQLConnection.createConnection(
-        host: _mysqlConfigBox.get('host'),
-        port: _mysqlConfigBox.get('port'),
-        userName: _mysqlConfigBox.get('username'),
-        password: _mysqlConfigBox.get('password'),
-        databaseName: _mysqlConfigBox.get('databaseName'),
-      );
-      await conn.connect();
-
-      var stmt = await conn.prepare(
-        "INSERT INTO users (username, password, fname, lname, phone, role) VALUES (?, ?, ?, ?, ?, ?)",
-      );
-      await stmt.execute([username, password, fname, lname, phone, role]);
-      await stmt.deallocate();
-      await conn.close();
-
-      SqliteService.addUser(
-        username: username,
-        password: password,
-        fname: fname,
-        lname: lname,
-        phone: phone,
-        role: role,
-      );
-
-      return ReturnTypes.success;
-    } catch (e) {
-      debugPrint(e.toString());
-
-      if (e.toString().contains('Duplicate entry')) {
-        return ReturnTypes.duplicate;
-      }
-
-      return ReturnTypes.failed;
-    }
-  }
-
-  static Future<dynamic> addProduct({
-    required String barcode,
-    required String name,
-    required String category,
-    String? arabicName,
-    required double price,
-    required double price2,
-    required double vatPerc,
-    required double quantity,
-    String? location,
-    String? expiryDate,
-  }) async {
-    try {
-      final conn = await MySQLConnection.createConnection(
-        host: _mysqlConfigBox.get('host'),
-        port: _mysqlConfigBox.get('port'),
-        userName: _mysqlConfigBox.get('username'),
-        password: _mysqlConfigBox.get('password'),
-        databaseName: _mysqlConfigBox.get('databaseName'),
-      );
-      await conn.connect();
-
-      var stmt = await conn.prepare(
-        "INSERT INTO products (barcode, description, category, ar_desc, price, price2, vat_perc, quantity, location, expiry) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      );
-      await stmt.execute([
-        barcode,
-        name,
-        category,
-        arabicName,
-        price,
-        price2,
-        vatPerc,
-        quantity,
-        location,
-        expiryDate,
-      ]);
-      await stmt.deallocate();
-      await conn.close();
-
-      SqliteService.addProduct(
-        barcode: barcode,
-        category: category,
-        description: name,
-        arDesc: arabicName,
-        price: price,
-        price2: price2,
-        vatPerc: vatPerc,
-        quantity: quantity,
-        location: location,
-        expiry: expiryDate,
-      );
-
-      // remove from un-synced products
-      UnSyncedProducts.deleteUnSyncedProduct(barcode);
-
-      return ReturnTypes.success;
-    } catch (e) {
-      debugPrint(e.toString());
-
-      if (e.toString().contains('Duplicate entry')) {
-        return ReturnTypes.duplicate;
-      }
-
       return ReturnTypes.failed;
     }
   }

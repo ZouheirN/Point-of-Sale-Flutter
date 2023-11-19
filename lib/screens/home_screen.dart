@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_fgbg/flutter_fgbg.dart';
 import 'package:gap/gap.dart';
 import 'package:pos_app/screens/employees_screen.dart';
 import 'package:pos_app/screens/login_screen.dart';
@@ -9,7 +8,6 @@ import 'package:pos_app/screens/transaction_history_screen.dart';
 import 'package:pos_app/screens/transaction_type_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
-import 'package:pos_app/services/unsynced_products_crud.dart';
 import 'package:pos_app/widgets/card.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
@@ -29,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final _refreshController = RefreshController(initialRefresh: false);
 
   List<Map<String, dynamic>> _lowQuantityProducts = [];
-  List _unsyncedProducts = [];
   late Future _dataFuture;
 
   void _logout() {
@@ -40,29 +37,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openSettings() {
-    Navigator.of(context)
-        .push(
+    Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const SettingsScreen(
           goToDashboard: true,
         ),
       ),
-    )
-        .then((value) {
-      _getData();
-    });
+    );
   }
 
   void _onRefresh() async {
     // get data
-    await _getData();
+    await _getData(sync: true);
 
     _refreshController.refreshCompleted();
   }
 
-  Future<void> _getData() async {
-    // sync data from mysql
-    await MySQLService.syncFromMySQL(null, showSnackBar: false);
+  Future<void> _getData({bool sync = false}) async {
+    if (sync) {
+      // sync data from mysql
+      await MySQLService.syncFromMySQL(null, showSnackBar: false);
+    }
 
     // todo get sales made
 
@@ -74,11 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _lowQuantityProducts = value;
       });
     });
-
-    // get un-synced products
-    setState(() {
-      _unsyncedProducts = UnSyncedProducts.getUnSyncedProducts();
-    });
   }
 
   @override
@@ -89,72 +79,71 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FGBGNotifier(
-      onEvent: (event) {
-        if (event == FGBGType.foreground) {
-          _getData();
-        }
-      },
-      child: FutureBuilder(
-        future: _dataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // Loading state
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Dashboard'),
-                centerTitle: true,
-              ),
-              body: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            // Error state
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Dashboard'),
-                centerTitle: true,
-              ),
-              body: Center(
-                child: Text('Error: ${snapshot.error}'),
-              ),
-            );
-          } else {
-            // Data loaded successfully
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Dashboard'),
-                centerTitle: true,
-              ),
-              drawer: _buildDrawer(),
-              body: Padding(
-                padding: const EdgeInsets.all(15.0),
-                child: SmartRefresher(
-                  enablePullDown: true,
-                  onRefresh: _onRefresh,
-                  controller: _refreshController,
-                  header: const ClassicHeader(),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        _buildAlertCard(),
-                        PrimaryCard(
-                          title: 'Sales Target',
-                          text: 'Sales Made: $_salesMade out of $_salesTarget',
-                        ),
-                        // Add more widgets based on your data
-                      ],
-                    ),
+    return FutureBuilder(
+      future: _dataFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Loading state
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Dashboard'),
+              centerTitle: true,
+            ),
+            body: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          // Error state
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Dashboard'),
+              centerTitle: true,
+            ),
+            body: Center(
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          );
+        } else {
+          // Data loaded successfully
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Dashboard'),
+              centerTitle: true,
+            ),
+            drawer: _buildDrawer(),
+            body: Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: SmartRefresher(
+                enablePullDown: true,
+                onRefresh: _onRefresh,
+                controller: _refreshController,
+                header: const ClassicHeader(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      if (UserInfo.getLastSynced() != null)
+                        Text('Last Synced: ${UserInfo.getLastSynced()}'),
+                      // alert card
+                      AlertCard(
+                        lowQuantityProducts: _lowQuantityProducts,
+                      ),
+                      // sales card
+                      PrimaryCard(
+                        title: 'Sales Target',
+                        text: 'Sales Made: $_salesMade out of $_salesTarget',
+                      ),
+                      // Add more widgets based on your data
+                    ],
                   ),
                 ),
               ),
-            );
-          }
-        },
-      ),
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -230,12 +219,6 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         ],
       ),
-    );
-  }
-
-  Widget _buildAlertCard() {
-    return AlertCard(
-      lowQuantityProducts: _lowQuantityProducts,
     );
   }
 }

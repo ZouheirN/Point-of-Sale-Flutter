@@ -15,6 +15,16 @@ class UserInfo {
     userInfoBox.put('lname', lname);
   }
 
+  static void setLastSynced(DateTime lastSynced) {
+    userInfoBox.put('lastSynced', lastSynced);
+  }
+
+  static String? getLastSynced() {
+    final dateTime = userInfoBox.get('lastSynced') ?? '';
+    if (dateTime == '') return null;
+    return '${dateTime.day}/${dateTime.month}/${dateTime.year} - ${dateTime.hour}:${dateTime.minute}';
+  }
+
   static String getUsername() {
     return userInfoBox.get('username') ?? '';
   }

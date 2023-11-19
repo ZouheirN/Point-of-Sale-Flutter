@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:pos_app/screens/add_employee_screen.dart';
 import 'package:pos_app/services/mysql_service.dart';
 import 'package:pos_app/services/sqlite_service.dart';
 import 'package:pos_app/widgets/global_snackbar.dart';
@@ -38,23 +37,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     });
 
     _refreshController.refreshCompleted();
-  }
-
-  void _addUser() {
-    Navigator.of(context)
-        .push(
-      MaterialPageRoute(builder: (context) => const AddEmployeeScreen()),
-    )
-        .then((value) {
-      setState(() {
-        SqliteService.getAllUsers().then((value) {
-          setState(() {
-            _users = value;
-            _isLoading = false;
-          });
-        });
-      });
-    });
   }
 
   void _viewUserInfo(String username) {
@@ -150,7 +132,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Employees'),
-        actions: [IconButton(onPressed: _addUser, icon: const Icon(Icons.add))],
       ),
       body: SmartRefresher(
         controller: _refreshController,

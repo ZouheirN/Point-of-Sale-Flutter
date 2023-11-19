@@ -11,7 +11,6 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox('mysql_config');
   await Hive.openBox('userInfo');
-  await Hive.openBox('unSyncedProducts');
 
   // SQFLite
   await SqliteService.initializeDB();
